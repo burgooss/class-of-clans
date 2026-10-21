@@ -102,3 +102,23 @@ Reglas:
 - Una mejora con `ends_at ≤ ahora` se muestra como terminada aunque no se haya reimportado.
 - Un import cuyo `captured_at` es menor al del último export de la cuenta se rechaza sin cambiar nada.
 - Borrar una cuenta borra en cascada sus exports, mejoras y sugerencias; las bases y ejércitos asociados pasan a `account_id = NULL`.
+
+## Respaldo (F8)
+
+Un archivo JSON con todos los datos, que se comparte desde Ajustes → Exportar datos y se restaura con Importar datos.
+
+```json
+{
+  "format": "clash-builders-backup",
+  "version": 1,
+  "schemaVersion": 1,
+  "exportedAt": 1700000000,
+  "tables": { "accounts": [], "exports": [], "active_upgrades": [], "suggestions": [], "layouts": [], "armies": [] }
+}
+```
+
+- `version` es la versión del formato del archivo; `schemaVersion` es la del esquema SQLite (`PRAGMA user_version`). Un respaldo con un `schemaVersion` distinto al de la app se rechaza: cuando el esquema cambie habrá que escribir una conversión.
+- Cada tabla lleva todas sus columnas (definidas en `src/backup/format.ts`), **menos** `active_upgrades.notification_id`: las notificaciones son del teléfono y se reprograman al restaurar.
+- Importar **reemplaza todo** en una sola transacción. Antes se valida el archivo completo (formato, tipo de cada columna, valores permitidos y referencias entre tablas); si algo no cuadra, no se cambia nada.
+- Los IDs se conservan, así que las referencias siguen válidas.
+- El archivo incluye los JSON crudos de los exports y los tags de las cuentas: es información personal.

@@ -60,3 +60,6 @@ Por cuenta, una lista que yo armo de lo que quiero mejorar después.
 
 - Exportar todos los datos de la app a un archivo y compartirlo.
 - Importar ese archivo para restaurar en otro teléfono o después de reinstalar.
+- Importar reemplaza todos los datos actuales: se muestra un resumen del archivo y se pide confirmación.
+- Un archivo dañado, de otra app o de una versión incompatible se rechaza sin cambiar nada.
+- Tras restaurar, las notificaciones se reprograman según las mejoras restauradas.

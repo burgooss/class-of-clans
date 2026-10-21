@@ -71,6 +71,11 @@ Notas:
 
 ## Fase 8 — Respaldo (F8)
 
+- [x] Exportar todos los datos a un archivo JSON y compartirlo (`expo-file-system` + `expo-sharing`).
+- [x] Importar el archivo (`expo-document-picker`): valida todo antes de tocar nada, pide confirmación y reemplaza en una transacción.
+- [x] Reprogramar las notificaciones tras restaurar.
+- [ ] Probar en el teléfono: exportar, desinstalar o borrar datos de la app, e importar. Comprobar también que el selector de archivos encuentra el respaldo (se acepta cualquier tipo de archivo).
+
 ## Después de v1
 
 - Laboratorio, mascotas, herrero y base del constructor.

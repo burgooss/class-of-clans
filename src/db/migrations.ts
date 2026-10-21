@@ -77,6 +77,9 @@ const MIGRATIONS: string[] = [
   `,
 ];
 
+/** Versión actual del esquema (PRAGMA user_version tras migrar). */
+export const SCHEMA_VERSION = MIGRATIONS.length;
+
 export async function migrateDb(db: SQLiteDatabase): Promise<void> {
   await db.execAsync('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
 
