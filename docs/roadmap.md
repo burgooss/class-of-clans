@@ -10,7 +10,7 @@ Trabajar una fase a la vez. Al terminar cada una: probar en el teléfono, marcar
 
 ## Fase 1 — Entender el export
 
-- [ ] Analizar los ejemplos de `samples/` y documentar la estructura real en `docs/formato-export.md`.
+- [x] Analizar los ejemplos de `samples/` y documentar la estructura real en `docs/formato-export.md`.
 - [ ] Responder las preguntas abiertas de ese doc.
 - [ ] Ajustar `docs/modelo-datos.md` si algo no encaja.
 
@@ -23,9 +23,9 @@ Trabajar una fase a la vez. Al terminar cada una: probar en el teléfono, marcar
 
 ## Fase 3 — Parser
 
-- [ ] Módulo puro `src/export/` que recibe el texto del JSON y devuelve tag, nivel de ayuntamiento, número de constructores y mejoras activas.
-- [ ] Pruebas unitarias con cada ejemplo de `samples/`.
-- [ ] Errores claros para JSON inválido o que no es un export.
+- [x] Módulo puro `src/export/` que recibe el texto del JSON y devuelve tag, nivel de ayuntamiento, número de constructores y mejoras activas. (Versión inicial; ver pendientes en `docs/formato-export.md`.)
+- [x] Pruebas unitarias con cada ejemplo de `samples/` (se saltan solas si la carpeta no existe).
+- [x] Errores claros para JSON inválido o que no es un export (`ExportParseError` con código y mensaje en español).
 
 ## Fase 4 — Importar y ver constructores (F1, F2, F3)
 

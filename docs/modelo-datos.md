@@ -40,10 +40,10 @@ Mejoras en curso, generadas por el parser a partir del último export de cada cu
 | id | INTEGER PK | |
 | account_id | INTEGER FK → accounts.id | |
 | export_id | INTEGER FK → exports.id | |
-| slot_type | TEXT | `builder`, `lab`, `pet_house`, `builder_base`… |
+| slot_type | TEXT | `builder`, `lab`, `pet_house`, `builder_base`, `other`. Lo decide el parser por la lista del export donde aparece el `timer` (ver `docs/formato-export.md`). |
 | game_id | INTEGER | ID del juego |
 | name | TEXT | Nombre legible si hay catálogo; si no, null |
-| target_level | INTEGER | |
+| target_level | INTEGER | Pendiente: el export trae `lvl` sin aclarar si es el nivel actual o el destino durante una mejora. El parser lo expone como `level`. |
 | ends_at | INTEGER | `captured_at + segundos_restantes` |
 | notification_id | TEXT | ID de la notificación programada |
 
