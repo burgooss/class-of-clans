@@ -1,5 +1,5 @@
-import { Placeholder } from '@/components/Placeholder';
+import { LinkCollectionScreen } from '@/components/LinkCollectionScreen';
 
 export default function ArmiesScreen() {
-  return <Placeholder title="Ejércitos" note="Fase 7: links de ejércitos guardados." />;
+  return <LinkCollectionScreen collection="armies" />;
 }

@@ -1,3 +1,5 @@
+import { type OptionalIntParse, parseOptionalInt } from './numbers';
+
 export type SuggestionStatus = 'pending' | 'in_progress' | 'done';
 
 export const STATUS_LABEL: Record<SuggestionStatus, string> = {
@@ -15,16 +17,11 @@ export function nextStatus(status: SuggestionStatus): SuggestionStatus {
 
 export const MAX_TARGET_LEVEL = 999;
 
-export type LevelParse = { ok: true; value: number | null } | { ok: false };
+export type LevelParse = OptionalIntParse;
 
 /** Nivel objetivo escrito por el usuario: vacío es válido (sin nivel); si no, entero de 1 a 999. */
 export function parseTargetLevel(text: string): LevelParse {
-  const trimmed = text.trim();
-  if (trimmed === '') return { ok: true, value: null };
-  if (!/^\d+$/.test(trimmed)) return { ok: false };
-  const value = Number(trimmed);
-  if (value < 1 || value > MAX_TARGET_LEVEL) return { ok: false };
-  return { ok: true, value };
+  return parseOptionalInt(text, 1, MAX_TARGET_LEVEL);
 }
 
 export type OrderItem = { id: number; hidden: boolean };

@@ -1,5 +1,5 @@
-import { Placeholder } from '@/components/Placeholder';
+import { LinkCollectionScreen } from '@/components/LinkCollectionScreen';
 
 export default function LayoutsScreen() {
-  return <Placeholder title="Bases" note="Fase 7: links de bases por nivel de ayuntamiento y tipo." />;
+  return <LinkCollectionScreen collection="layouts" />;
 }

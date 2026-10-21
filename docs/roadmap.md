@@ -62,7 +62,12 @@ Notas:
 
 ## Fase 7 — Bases y ejércitos (F6, F7)
 
-- [ ] Verificar el formato real de los links del juego antes de escribir la detección.
+- [x] Guardar, editar y borrar bases y ejércitos (nombre, link, ayuntamiento opcional, tipo/uso, cuenta opcional, notas).
+- [x] Filtrar por ayuntamiento y tipo/uso. Tocar un elemento abre su link (`Linking.openURL`); el botón "Editar" abre el formulario.
+- [x] Botón "Pegar del portapapeles" en el formulario para traer el link.
+- [ ] **Verificar el formato real de los links del juego** (copiar de la app un link de base y uno de ejército y pegarlos en el chat).
+- [ ] **Detección al pegar** (F6): reconocer si el link es de base y leer el ayuntamiento del propio link. No se escribió porque no se ha visto ningún link real; hoy solo se exige que sea http(s).
+- [ ] Probar en el teléfono que el link abre el juego.
 
 ## Fase 8 — Respaldo (F8)
 

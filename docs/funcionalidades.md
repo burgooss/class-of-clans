@@ -49,7 +49,7 @@ Por cuenta, una lista que yo armo de lo que quiero mejorar después.
 - Opcionalmente asociarla a una cuenta; si no, queda disponible para todas.
 - Filtrar por nivel de ayuntamiento y tipo.
 - Tocar la base abre el link en el juego.
-- Al pegar un link, detectar si es de base y leer el nivel de ayuntamiento del propio link cuando venga ahí.
+- Al pegar un link, detectar si es de base y leer el nivel de ayuntamiento del propio link cuando venga ahí. **Pendiente**: requiere ver links reales; mientras tanto el ayuntamiento se escribe a mano y el link solo debe ser http(s).
 
 ## F7. Ejércitos
 
