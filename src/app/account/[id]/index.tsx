@@ -1,10 +1,10 @@
 import { Link, router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { AliasModal } from '@/components/AliasModal';
-import { AccountError, deleteAccount, renameAccount } from '@/db/accounts';
+import { AccountError, deleteAccount, renameAccount, setNotificationsEnabled } from '@/db/accounts';
 import {
   type Account,
   type ActiveUpgrade,
@@ -12,17 +12,13 @@ import {
   getBuilderUpgrades,
   getLastCapturedAt,
 } from '@/db/queries';
-import { displayTargetLevel, freeBuilderCount, runningUpgrades } from '@/domain/builders';
+import { freeBuilderCount, runningUpgrades } from '@/domain/builders';
 import { formatAgo, formatRemaining, STALE_EXPORT_SECONDS } from '@/domain/format';
-import { upgradeName } from '@/domain/names';
+import { levelSuffix, upgradeName } from '@/domain/names';
 import { useNow } from '@/hooks/useNow';
+import { PERMISSION_HELP, syncNow } from '@/notifications';
 
 type Data = { account: Account; upgrades: ActiveUpgrade[]; capturedAt: number | null };
-
-function levelText(stored: number | null): string {
-  const level = displayTargetLevel(stored);
-  return level === null ? '' : ` → nivel ${level}`;
-}
 
 export default function AccountScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -60,11 +56,23 @@ export default function AccountScreen() {
       await renameAccount(db, Number(id), alias);
       setRenaming(false);
       await load();
+      await syncNow(db);
     } catch (error) {
       setRenaming(false);
       failure(error);
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function toggleNotifications(enabled: boolean) {
+    try {
+      await setNotificationsEnabled(db, Number(id), enabled);
+      await load();
+      const sync = await syncNow(db);
+      if (enabled && sync?.permissionDenied) Alert.alert('Notificaciones bloqueadas', PERMISSION_HELP);
+    } catch (error) {
+      failure(error);
     }
   }
 
@@ -80,6 +88,7 @@ export default function AccountScreen() {
           onPress: async () => {
             try {
               await deleteAccount(db, Number(id));
+              await syncNow(db);
               router.back();
             } catch (error) {
               failure(error);
@@ -116,12 +125,17 @@ export default function AccountScreen() {
         </View>
       )}
 
+      <View style={styles.switchRow}>
+        <Text style={styles.switchLabel}>Avisarme cuando un constructor quede libre</Text>
+        <Switch value={account.notifications_on === 1} onValueChange={toggleNotifications} />
+      </View>
+
       <Text style={styles.section}>Constructores</Text>
       {running.map((u) => (
         <View key={u.id} style={styles.card}>
           <View style={styles.cardText}>
             <Text style={styles.name}>{upgradeName(u.game_id, u.name)}</Text>
-            <Text style={styles.detail}>{levelText(u.target_level).trim()}</Text>
+            <Text style={styles.detail}>{levelSuffix(u.target_level).trim()}</Text>
           </View>
           <Text style={styles.countdown}>{formatRemaining(u.endsAt - now)}</Text>
         </View>
@@ -139,7 +153,7 @@ export default function AccountScreen() {
           {finished.map((u) => (
             <Text key={u.id} style={styles.meta}>
               ✓ {upgradeName(u.game_id, u.name)}
-              {levelText(u.target_level)}
+              {levelSuffix(u.target_level)}
             </Text>
           ))}
         </>
@@ -193,6 +207,8 @@ const styles = StyleSheet.create({
   freeCard: { backgroundColor: '#dcfce7' },
   freeText: { color: '#15803d', fontSize: 15, fontWeight: '600' },
   link: { marginTop: 24, fontSize: 16, color: '#2563eb' },
+  switchRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginTop: 8 },
+  switchLabel: { flex: 1, fontSize: 15 },
   action: { padding: 14, borderRadius: 12, backgroundColor: 'rgba(128,128,128,0.12)' },
   actionText: { fontSize: 15, fontWeight: '600' },
   danger: { color: '#b91c1c' },

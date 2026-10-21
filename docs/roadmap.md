@@ -42,9 +42,15 @@ Notas:
 
 ## Fase 5 — Notificaciones (F4)
 
-- [ ] Programar, cancelar y reprogramar al reimportar y al borrar una cuenta.
-- [ ] Interruptor por cuenta.
-- [ ] Probar con el teléfono bloqueado.
+- [x] Programar, cancelar y reprogramar al reimportar y al borrar una cuenta (`syncNotifications`, `src/notifications/sync.ts`).
+- [x] Interruptor por cuenta en el panel de cuenta.
+- [ ] Probar con el teléfono bloqueado (ver puntualidad abajo).
+
+Notas:
+- Las notificaciones locales funcionan en Expo Go en Android (SDK 58); lo que Expo Go no soporta es el push remoto, que la app no usa. No hace falta development build.
+- `syncNotifications` es declarativa e idempotente: compara lo que debería estar programado según la base con lo que el sistema tiene programado y corrige la diferencia. Se llama tras importar, renombrar, borrar, cambiar el interruptor y al abrir la app.
+- Solo avisan las mejoras de tipo `builder` (mismas suposiciones provisionales que el cálculo de constructores libres).
+- **Puntualidad:** sin el permiso `SCHEDULE_EXACT_ALARM`, Android puede retrasar el aviso unos minutos con el teléfono en reposo. Ese permiso no se puede añadir dentro de Expo Go; exigiría una development build. Decidir después de probar con el teléfono bloqueado.
 
 ## Fase 6 — Cola de mejoras (F5)
 

@@ -45,7 +45,7 @@ Mejoras en curso, generadas por el parser a partir del último export de cada cu
 | name | TEXT | Nombre legible si hay catálogo; si no, null |
 | target_level | INTEGER | Pendiente: el export trae `lvl` sin aclarar si es el nivel actual o el destino durante una mejora. El parser lo expone como `level`. |
 | ends_at | INTEGER | `captured_at + segundos_restantes` |
-| notification_id | TEXT | ID de la notificación programada |
+| notification_id | TEXT | ID de la notificación programada. Lo escribe y limpia `syncNotifications`; se pierde junto con la fila al reimportar. |
 
 ## suggestions
 

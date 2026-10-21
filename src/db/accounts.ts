@@ -54,3 +54,9 @@ export async function deleteAccount(db: SQLiteDatabase, accountId: number): Prom
 
   return { notificationIds };
 }
+
+/** Activa o desactiva los avisos de una cuenta (F4). Después hay que sincronizar las notificaciones. */
+export async function setNotificationsEnabled(db: SQLiteDatabase, accountId: number, enabled: boolean): Promise<void> {
+  const result = await db.runAsync('UPDATE accounts SET notifications_on = ? WHERE id = ?', enabled ? 1 : 0, accountId);
+  if (result.changes === 0) throw new AccountError('not_found', 'La cuenta ya no existe.');
+}

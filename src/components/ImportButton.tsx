@@ -7,6 +7,7 @@ import { AliasModal } from '@/components/AliasModal';
 import { ImportError, importExport } from '@/db/imports';
 import { getAccountByTag } from '@/db/queries';
 import { ExportParseError, parseExport, type ParsedExport } from '@/export';
+import { PERMISSION_HELP, syncNow } from '@/notifications';
 
 type Props = { onImported: () => void };
 
@@ -32,10 +33,11 @@ export function ImportButton({ onImported }: Props) {
     onImported();
     const name = account?.alias ?? parsed.tag;
     const count = result.upgradeCount;
-    Alert.alert(
-      result.isNew ? 'Cuenta agregada' : 'Cuenta actualizada',
-      `${name}: ${count} ${count === 1 ? 'mejora en curso' : 'mejoras en curso'}.`,
-    );
+    const sync = await syncNow(db);
+    const lines = [`${name}: ${count} ${count === 1 ? 'mejora en curso' : 'mejoras en curso'}.`];
+    if (sync?.permissionDenied) lines.push(PERMISSION_HELP);
+    else if (sync === null || sync.failed > 0) lines.push('No se pudieron programar todos los avisos. Se reintentará al abrir la app.');
+    Alert.alert(result.isNew ? 'Cuenta agregada' : 'Cuenta actualizada', lines.join('\n\n'));
   }
 
   async function start() {

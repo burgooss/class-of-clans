@@ -32,6 +32,7 @@ Botón "Pegar export" que lee el portapapeles.
 - Una notificación local cuando termina cada mejora: "Granja TH12: constructor libre".
 - Se pueden activar o desactivar por cuenta.
 - Al reimportar una cuenta se cancelan sus notificaciones anteriores y se crean las nuevas.
+- Una mejora que ya terminó no avisa. Si el usuario niega el permiso del sistema, la app lo indica al importar o al activar el aviso.
 
 ## F5. Cola de mejoras sugeridas
 

@@ -9,7 +9,8 @@ export const HUT_UPGRADE_OCCUPIES_BUILDER = true;
 /** Lo mínimo que necesita el cálculo de una mejora de constructor. */
 export type TimedUpgrade = { gameId: number; endsAt: number };
 
-function occupiesBuilder(upgrade: TimedUpgrade): boolean {
+/** Si esta mejora ocupa un constructor (y por tanto libera uno al terminar). */
+export function occupiesBuilder(upgrade: TimedUpgrade): boolean {
   return HUT_UPGRADE_OCCUPIES_BUILDER || upgrade.gameId !== BUILDER_HUT_ID;
 }
 
