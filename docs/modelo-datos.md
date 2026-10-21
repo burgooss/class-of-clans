@@ -90,7 +90,15 @@ Mi cola de siguientes mejoras por cuenta.
 
 ## Reglas de cálculo
 
+Suposiciones provisionales (pendientes de confirmar, ver `docs/formato-export.md`):
+
+- Mejorar una cabaña de constructor ocupa un constructor como cualquier otra mejora `builder` (`HUT_UPGRADE_OCCUPIES_BUILDER`).
+- `lvl` de un elemento en mejora es el nivel destino y se guarda tal cual en `target_level` (`LVL_IS_TARGET_LEVEL`).
+
+Reglas:
+
 - **Constructores libres ahora** = `builder_count` − mejoras con `slot_type = 'builder'` y `ends_at > ahora`.
 - **Siguiente libre** = mínimo `ends_at` futuro de las mejoras `builder` de la cuenta.
 - Una mejora con `ends_at ≤ ahora` se muestra como terminada aunque no se haya reimportado.
+- Un import cuyo `captured_at` es menor al del último export de la cuenta se rechaza sin cambiar nada.
 - Borrar una cuenta borra en cascada sus exports, mejoras y sugerencias; las bases y ejércitos asociados pasan a `account_id = NULL`.

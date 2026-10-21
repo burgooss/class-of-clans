@@ -67,6 +67,8 @@ Cualquier otro nombre requiere el catálogo de la pregunta 7.
 6. **Impulso activo:** exportar una cuenta con poción de constructor y comparar.
 7. **Constructor libre:** exportar una cuenta con algún constructor sin mejora y confirmar que simplemente no hay `timer` para él (los 3 ejemplos tenían todos los constructores ocupados, si el punto 3 resulta afirmativo).
 
+Mientras tanto la app usa dos suposiciones provisionales, cada una en una constante de `src/domain/builders.ts`: la del punto 3 (`HUT_UPGRADE_OCCUPIES_BUILDER = true`) y la del punto 4 (`LVL_IS_TARGET_LEVEL = true`).
+
 ## Ejemplos para pruebas
 
 Guardados en `samples/` (ignorado por git):

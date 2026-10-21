@@ -29,9 +29,16 @@ Trabajar una fase a la vez. Al terminar cada una: probar en el teléfono, marcar
 
 ## Fase 4 — Importar y ver constructores (F1, F2, F3)
 
-- [ ] Botón "Pegar export" con alta automática de cuenta nueva.
-- [ ] Panel de cuenta con cuentas regresivas.
-- [ ] Vista general ordenada por siguiente constructor libre.
+- [x] Botón "Pegar export" con alta automática de cuenta nueva (pide alias).
+- [x] Panel de cuenta con cuentas regresivas.
+- [x] Vista general ordenada por siguiente constructor libre.
+- [ ] Probar en el teléfono con Expo Go y con exports reales.
+- [ ] Quitar las suposiciones provisionales cuando se confirmen las dudas 3 y 4 de `docs/formato-export.md` (constantes en `src/domain/builders.ts`).
+
+Notas:
+- La reprogramación de notificaciones al reimportar (F1) queda para la Fase 5.
+- Un export más antiguo que el último importado de esa cuenta se rechaza, para no pisar datos recientes con un portapapeles viejo.
+- Aún no hay forma de renombrar ni borrar una cuenta desde la app.
 
 ## Fase 5 — Notificaciones (F4)
 
