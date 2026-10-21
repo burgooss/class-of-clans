@@ -1,0 +1,96 @@
+# Modelo de datos (SQLite)
+
+Nombres de tablas y columnas en inglés. Tiempos en epoch UTC (segundos).
+
+## accounts
+
+Una fila por cuenta del juego.
+
+| Columna | Tipo | Notas |
+|---|---|---|
+| id | INTEGER PK | |
+| tag | TEXT UNIQUE NOT NULL | Ej. `#8GGCUQGR9` |
+| alias | TEXT NOT NULL | Nombre que le pongo |
+| town_hall | INTEGER | Del último export |
+| builder_count | INTEGER | Del último export |
+| notifications_on | INTEGER | 0/1, default 1 |
+| last_export_id | INTEGER FK → exports.id | |
+| created_at | INTEGER | |
+
+## exports
+
+Historial de imports. Guarda el JSON crudo para poder re-procesarlo.
+
+| Columna | Tipo | Notas |
+|---|---|---|
+| id | INTEGER PK | |
+| account_id | INTEGER FK → accounts.id | |
+| captured_at | INTEGER | Hora del export si viene en el JSON; si no, hora del import |
+| imported_at | INTEGER | |
+| raw_json | TEXT NOT NULL | |
+
+Mantener solo los últimos N exports por cuenta (ej. 10) para no crecer sin límite.
+
+## active_upgrades
+
+Mejoras en curso, generadas por el parser a partir del último export de cada cuenta. Se borran y recrean en cada import.
+
+| Columna | Tipo | Notas |
+|---|---|---|
+| id | INTEGER PK | |
+| account_id | INTEGER FK → accounts.id | |
+| export_id | INTEGER FK → exports.id | |
+| slot_type | TEXT | `builder`, `lab`, `pet_house`, `builder_base`… |
+| game_id | INTEGER | ID del juego |
+| name | TEXT | Nombre legible si hay catálogo; si no, null |
+| target_level | INTEGER | |
+| ends_at | INTEGER | `captured_at + segundos_restantes` |
+| notification_id | TEXT | ID de la notificación programada |
+
+## suggestions
+
+Mi cola de siguientes mejoras por cuenta.
+
+| Columna | Tipo | Notas |
+|---|---|---|
+| id | INTEGER PK | |
+| account_id | INTEGER FK → accounts.id | |
+| description | TEXT NOT NULL | Ej. "Torre infernal a 10" |
+| target_level | INTEGER | Opcional |
+| position | INTEGER | Orden en la cola |
+| status | TEXT | `pending`, `in_progress`, `done` |
+| notes | TEXT | |
+| created_at | INTEGER | |
+
+## layouts (bases)
+
+| Columna | Tipo | Notas |
+|---|---|---|
+| id | INTEGER PK | |
+| account_id | INTEGER FK → accounts.id, NULL | NULL = para todas las cuentas |
+| name | TEXT NOT NULL | |
+| url | TEXT NOT NULL | Link del juego |
+| town_hall | INTEGER | |
+| kind | TEXT | `war`, `trophy`, `farm`, `other` |
+| notes | TEXT | |
+| created_at | INTEGER | |
+
+## armies
+
+| Columna | Tipo | Notas |
+|---|---|---|
+| id | INTEGER PK | |
+| account_id | INTEGER FK → accounts.id, NULL | NULL = para todas |
+| name | TEXT NOT NULL | |
+| url | TEXT NOT NULL | Link del juego |
+| town_hall | INTEGER | |
+| purpose | TEXT | `war`, `farm`, `other` |
+| notes | TEXT | |
+| created_at | INTEGER | |
+
+## Reglas de cálculo
+
+- **Constructores libres ahora** = `builder_count` − mejoras con `slot_type = 'builder'` y `ends_at > ahora`.
+- **Siguiente libre** = mínimo `ends_at` futuro de las mejoras `builder` de la cuenta.
+- Una mejora con `ends_at ≤ ahora` se muestra como terminada aunque no se haya reimportado.
+- Borrar una cuenta borra en cascada sus exports, mejoras y sugerencias; las bases y ejércitos asociados pasan a `account_id = NULL`.
