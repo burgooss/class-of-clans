@@ -38,7 +38,8 @@ Botón "Pegar export" que lee el portapapeles.
 
 Por cuenta, una lista que yo armo de lo que quiero mejorar después.
 
-- Agregar, editar, borrar y reordenar (arrastrar).
+- Agregar, editar, borrar y reordenar. Por ahora se reordena con botones ▲▼; arrastrar queda pendiente (ver `docs/roadmap.md`).
+- Cada sugerencia nueva se agrega al final de la cola. Tocar la etiqueta de estado lo cambia (pendiente → en curso → hecha); el estado también se edita en el formulario.
 - Cada sugerencia: descripción, nivel objetivo opcional, notas, estado (pendiente / en curso / hecha).
 - Las hechas se pueden ocultar.
 

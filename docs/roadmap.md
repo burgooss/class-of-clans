@@ -54,6 +54,12 @@ Notas:
 
 ## Fase 6 — Cola de mejoras (F5)
 
+- [x] Agregar, editar y borrar sugerencias por cuenta (descripción, nivel objetivo opcional, notas, estado).
+- [x] Reordenar con botones ▲▼ (`moveSuggestion`; salta las hechas cuando están ocultas).
+- [x] Ocultar las hechas.
+- [ ] Reordenar arrastrando. Se dejó con botones: SDK 58 trae `react-native-gesture-handler` 3.x y `react-native-draggable-flatlist` no se actualiza desde mayo de 2025, así que no se pudo garantizar sin probar en el teléfono. La lógica de orden (`moveWithin` en `src/domain/suggestions.ts` y `moveSuggestion` en `src/db/suggestions.ts`) no depende de la interfaz; para arrastrar habría que añadir una función que reciba el orden completo y dejar la pantalla como único cambio grande.
+- [ ] Probar en el teléfono.
+
 ## Fase 7 — Bases y ejércitos (F6, F7)
 
 - [ ] Verificar el formato real de los links del juego antes de escribir la detección.
