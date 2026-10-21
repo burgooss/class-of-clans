@@ -7,7 +7,7 @@ import { parseExport } from '..';
 const SAMPLES_DIR = join(__dirname, '..', '..', '..', 'samples');
 
 // Cantidades esperadas, obtenidas del análisis de docs/formato-export.md.
-// townHall y builderCount siguen pendientes de confirmar con el usuario.
+// townHall y builderCount confirmados por el usuario.
 const EXPECTED = [
   { file: 'cuenta-a.json', townHall: 14, builderCount: 5, slots: { builder: 5, lab: 1, pet_house: 1 } },
   { file: 'cuenta-b.json', townHall: 8, builderCount: 3, slots: { builder: 3, lab: 1 } },

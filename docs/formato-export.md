@@ -6,7 +6,7 @@ En Clash of Clans: Ajustes → bajar hasta Data Export → Copiar. El JSON queda
 
 ## Base de este documento
 
-Analizado con 3 exports reales tomados el 2026-10-20 (cuentas A, B y C; ayuntamiento 14, 8 y 4 según el ID `1000001`, ver pendientes), guardados en `samples/` (ignorado por git). **Ninguno tenía impulso activo ni constructores libres**, así que esos casos siguen sin verificar.
+Analizado con 3 exports reales tomados el 2026-10-20 (cuentas A, B y C; ayuntamiento 14, 8 y 4), guardados en `samples/` (ignorado por git). **Ninguno tenía impulso activo ni constructores libres**, así que esos casos siguen sin verificar.
 
 Estado de cada afirmación: **Confirmado** (visto directamente en los datos), **Probable** (los datos lo sugieren, falta confirmar con el usuario o con un export más) o **Pendiente**.
 
@@ -44,23 +44,23 @@ Todas las claves de lista aparecen siempre, aunque vengan vacías (`[]`), except
 | 2 | ¿Hora del export en el JSON? | Sí: `timestamp` (epoch, segundos). Los 3 exports, tomados uno tras otro, difieren 66 s y 41 s entre sí. | Confirmado |
 | 3 | ¿`timer` es restante o fin? | **Segundos restantes.** Dos mejoras idénticas (mismo ID y nivel) tienen timers que difieren en 6 s, algo imposible si fueran duración total, y los valores son muy pequeños para ser epoch. Fin de la mejora = `timestamp + timer`. | Probable (comprobar re-exportando una cuenta y viendo que el timer baja) |
 | 4 | ¿Cómo se distingue edificio / héroe / laboratorio? | **Por la clave del arreglo donde aparece el `timer`.** Observado: `buildings` y `heroes` (constructor), `units` (laboratorio), `pets` (casa de mascotas). No se vio ningún timer en `spells`, `siege_machines`, `equipment` ni en las claves con sufijo `2`. | Confirmado para lo observado |
-| 5 | ¿Cuántos constructores? | No hay campo. Se cuenta con las **cabañas de constructor**: elementos de `buildings` con `data = 1000015`, sumando `cnt` (o 1 si no trae). Resultado: A=5, B=3, C=2. | Probable (confirmar con el usuario; ver puntos pendientes) |
+| 5 | ¿Cuántos constructores? | No hay campo. Se cuenta con las **cabañas de constructor**: elementos de `buildings` con `data = 1000015`, sumando `cnt` (o 1 si no trae). Resultado: A=5, B=3, C=2. | Confirmado por el usuario (2026-10-20) |
 | 6 | ¿Qué cambia con impulso activo? | Sin datos: `boosts` vino vacío siempre. | Pendiente (falta `con-impulso.json`) |
 | 7 | ¿Cómo se traducen los IDs a nombres? | Sin cambios: catálogo propio o paquete de datos (revisar licencia). | Pendiente |
 
-### IDs observados (inferencia, no confirmada)
+### IDs confirmados
 
-Deducidos de la estructura de los datos, no de una fuente oficial:
+Deducidos de la estructura de los datos y confirmados por el usuario con sus cuentas:
 
 - `1000001`: Ayuntamiento (es el único con el campo `weapon`; niveles 14, 8 y 4 en las cuentas A, B y C).
-- `1000015`: cabaña de constructor (la cantidad total coincide con los constructores esperados).
+- `1000015`: cabaña de constructor (la cantidad total coincide con los constructores de cada cuenta: 5, 3 y 2).
 
 Cualquier otro nombre requiere el catálogo de la pregunta 7.
 
 ## Puntos pendientes de confirmar
 
-1. **Ayuntamiento = `1000001`.** Confirmar con los niveles reales de las 3 cuentas.
-2. **Número de constructores** de cada cuenta en el juego, y si alguna tiene B.O.B. En la cuenta A aparece `1000093` (nivel 1, cantidad 1), cuyo significado se desconoce.
+1. ~~Ayuntamiento = `1000001`~~ y ~~número de constructores~~: confirmados.
+2. **B.O.B.** En la cuenta A aparece `1000093` (nivel 1, cantidad 1), cuyo significado se desconoce. Falta saber si esa cuenta tiene B.O.B y si es ese edificio.
 3. **¿Mejorar una cabaña ocupa un constructor?** En la cuenta A hay 3 cabañas con `timer`. Si ocupan constructor, los 5 estaban ocupados (3 cabañas + 2 héroes); si no, solo 2 estaban ocupados. Cambia el cálculo de "constructores libres".
 4. **Significado de `lvl` cuando hay `timer`:** ¿nivel actual (antes de terminar) o nivel destino? Afecta `active_upgrades.target_level`. Los héroes y los edificios en mejora son buenos casos de prueba.
 5. **`helpers`** (`helper_cooldown`) y **`gear_up`**: significado. No bloquean v1.

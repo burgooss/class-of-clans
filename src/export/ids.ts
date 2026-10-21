@@ -1,6 +1,6 @@
 // IDs del juego usados por el parser.
-// Ambos están DEDUCIDOS de los exports de ejemplo y pendientes de confirmar con el
-// usuario (ver "Puntos pendientes" en docs/formato-export.md).
+// Deducidos de los exports de ejemplo y confirmados por el usuario con sus tres cuentas
+// (ayuntamiento 14, 8 y 4; constructores 5, 3 y 2). Ver docs/formato-export.md.
 
 /** Ayuntamiento: único edificio con el campo `weapon`. */
 export const TOWN_HALL_ID = 1000001;
