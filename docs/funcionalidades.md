@@ -18,6 +18,8 @@ Botón "Pegar export" que lee el portapapeles.
 - Lista cada constructor ocupado: qué mejora, a qué nivel y cuenta regresiva en vivo.
 - Muestra los constructores libres como "Libre".
 - Muestra "Última actualización: hace X" y un aviso si el export tiene más de 24 h.
+- Permite renombrar la cuenta (el alias no puede quedar vacío).
+- Permite borrar la cuenta, con confirmación. Se borran sus exports, mejoras y sugerencias; sus bases y ejércitos quedan disponibles para todas las cuentas.
 
 ## F3. Vista general
 

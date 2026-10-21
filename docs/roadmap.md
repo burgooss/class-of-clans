@@ -38,11 +38,11 @@ Trabajar una fase a la vez. Al terminar cada una: probar en el teléfono, marcar
 Notas:
 - La reprogramación de notificaciones al reimportar (F1) queda para la Fase 5.
 - Un export más antiguo que el último importado de esa cuenta se rechaza, para no pisar datos recientes con un portapapeles viejo.
-- Aún no hay forma de renombrar ni borrar una cuenta desde la app.
+- Renombrar y borrar cuentas está en el panel de cuenta (`src/db/accounts.ts`). Al borrar, `deleteAccount` devuelve los IDs de notificación de esa cuenta para que la Fase 5 los cancele.
 
 ## Fase 5 — Notificaciones (F4)
 
-- [ ] Programar, cancelar y reprogramar al reimportar.
+- [ ] Programar, cancelar y reprogramar al reimportar y al borrar una cuenta.
 - [ ] Interruptor por cuenta.
 - [ ] Probar con el teléfono bloqueado.
 
