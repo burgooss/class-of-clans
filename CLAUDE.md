@@ -27,7 +27,7 @@ Lee el archivo relevante antes de trabajar en una fase. Si una decisión cambia,
 - React Native + Expo (TypeScript), objetivo Android.
 - `expo-sqlite` para datos locales, `expo-clipboard` para leer el export, `expo-notifications` para avisos locales.
 - Todo vive en el teléfono. Sin backend, sin cuentas, sin login en v1.
-- Desarrollo en Linux, pruebas en un teléfono Android real con **Expo Go**. Si una librería necesita código nativo que Expo Go no trae, avisar antes de agregarla (obligaría a usar una development build).
+- Desarrollo en Linux, pruebas en un teléfono Android real con **Expo Go**. El Expo Go de la Play Store va un SDK por detrás del proyecto (la tienda soportaba SDK 57 cuando el proyecto ya usaba SDK 58): hay que instalar el APK que corresponda al SDK del proyecto desde https://github.com/expo/expo-go-releases/releases (ej. `Expo-Go-58.0.5.apk`). Se puede comprobar qué SDK soporta la tienda con `curl -s https://api.expo.dev/v2/versions/latest` (campo `expoGoSdkVersion`). Si una librería necesita código nativo que Expo Go no trae, avisar antes de agregarla (obligaría a usar una development build).
 - Navegación con expo-router: las rutas viven en `src/app/`; el resto del código (`db/`, `export/`, `components/`) fuera de esa carpeta. Alias `@/` apunta a `src/`.
 - Instalar dependencias siempre con `npx expo install <paquete>` para que la versión sea compatible con el SDK.
 
