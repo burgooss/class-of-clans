@@ -33,7 +33,7 @@ Trabajar una fase a la vez. Al terminar cada una: probar en el teléfono, marcar
 - [x] Panel de cuenta con cuentas regresivas.
 - [x] Vista general ordenada por siguiente constructor libre.
 - [ ] Probar en el teléfono con Expo Go y con exports reales.
-- [ ] Quitar las suposiciones provisionales cuando se confirmen las dudas 3 y 4 de `docs/formato-export.md` (constantes en `src/domain/builders.ts`).
+- [ ] Quitar la suposición provisional cuando se confirme la duda 3 de `docs/formato-export.md` (constante `HUT_UPGRADE_OCCUPIES_BUILDER` en `src/domain/builders.ts`). La duda 4 (`lvl`) ya está resuelta.
 
 Notas:
 - La reprogramación de notificaciones al reimportar (F1) queda para la Fase 5.
@@ -47,7 +47,7 @@ Notas:
 - [ ] Probar con el teléfono bloqueado (ver puntualidad abajo).
 
 Notas:
-- Las notificaciones locales funcionan en Expo Go en Android (SDK 58); lo que Expo Go no soporta es el push remoto, que la app no usa. No hace falta development build.
+- Las notificaciones locales deberían funcionar en Expo Go en Android (SDK 58); lo que Expo Go no soporta es el push remoto, que la app no usa. **Pero** `import 'expo-notifications'` falla en Expo Go 58.0.5: el índice carga `topicSubscription`, que exige el módulo nativo `ExpoTopicSubscriptionModule`, y la app se caía al arrancar. Por eso `src/notifications/expoNotifier.ts` importa solo los archivos internos que necesita (`expo-notifications/build/...`), de forma perezosa y protegida, y la prueba `expoNotifierPaths.test.ts` avisa si una actualización los mueve. Sigue pendiente confirmar en el teléfono que programar y recibir avisos funciona; si faltara otro módulo nativo en Expo Go, los avisos quedan desactivados pero la app no se cae.
 - `syncNotifications` es declarativa e idempotente: compara lo que debería estar programado según la base con lo que el sistema tiene programado y corrige la diferencia. Se llama tras importar, renombrar, borrar, cambiar el interruptor y al abrir la app.
 - Solo avisan las mejoras de tipo `builder` (mismas suposiciones provisionales que el cálculo de constructores libres).
 - **Puntualidad:** sin el permiso `SCHEDULE_EXACT_ALARM`, Android puede retrasar el aviso unos minutos con el teléfono en reposo. Ese permiso no se puede añadir dentro de Expo Go; exigiría una development build. Decidir después de probar con el teléfono bloqueado.
@@ -78,6 +78,6 @@ Notas:
 
 ## Después de v1
 
-- Laboratorio, mascotas, herrero y base del constructor.
-- Catálogo de nombres para los IDs del juego.
+- Avisos de notificación y vista general para laboratorio y mascotas; herrero.
+- Nombres en español (hoy salen en inglés del catálogo).
 - Widget de pantalla de inicio.

@@ -1,10 +1,13 @@
 import * as Clipboard from 'expo-clipboard';
 import { useEffect, useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
+import { Text } from '@/components/Text';
+import { TextInput } from '@/components/TextInput';
 import type { Account } from '@/db/queries';
 import type { LinkInput, SavedLink } from '@/db/links';
 import { CATEGORY_LABEL, type CollectionConfig, type LinkCategory } from '@/domain/links';
+import { colors } from '@/theme';
 
 type Props = {
   visible: boolean;
@@ -142,23 +145,23 @@ export function LinkModal({ visible, config, link, accounts, defaultCategory, bu
 }
 
 const styles = StyleSheet.create({
-  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)' },
+  backdrop: { flex: 1, backgroundColor: colors.backdrop },
   scroll: { flexGrow: 1, justifyContent: 'center', padding: 24 },
-  card: { backgroundColor: '#fff', borderRadius: 14, padding: 20, gap: 8 },
+  card: { backgroundColor: colors.modal, borderRadius: 14, padding: 20, gap: 8 },
   title: { fontSize: 18, fontWeight: '700', marginBottom: 4 },
   label: { fontSize: 13, opacity: 0.7, marginTop: 4 },
-  input: { borderWidth: 1, borderColor: 'rgba(128,128,128,0.5)', borderRadius: 8, padding: 10, fontSize: 16 },
+  input: { borderWidth: 1, borderColor: colors.inputBorder, borderRadius: 8, padding: 10, fontSize: 16 },
   notes: { minHeight: 70 },
-  paste: { fontSize: 14, color: '#2563eb' },
+  paste: { fontSize: 14, color: colors.accent },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: { paddingVertical: 7, paddingHorizontal: 12, borderRadius: 20, backgroundColor: 'rgba(128,128,128,0.15)' },
-  chipOn: { backgroundColor: '#2563eb' },
+  chip: { paddingVertical: 7, paddingHorizontal: 12, borderRadius: 20, backgroundColor: colors.chip },
+  chipOn: { backgroundColor: colors.accentStrong },
   chipText: { fontSize: 14 },
   chipTextOn: { color: '#fff', fontWeight: '600' },
   actions: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 },
   actionsRight: { flexDirection: 'row', gap: 24 },
   cancel: { fontSize: 16, opacity: 0.7 },
-  confirm: { fontSize: 16, fontWeight: '700', color: '#2563eb' },
-  delete: { fontSize: 16, color: '#b91c1c' },
+  confirm: { fontSize: 16, fontWeight: '700', color: colors.accent },
+  delete: { fontSize: 16, color: colors.danger },
   disabled: { opacity: 0.5 },
 });

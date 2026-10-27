@@ -1,13 +1,15 @@
 import * as Clipboard from 'expo-clipboard';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, StyleSheet, Text } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, StyleSheet } from 'react-native';
 
+import { Text } from '@/components/Text';
 import { AliasModal } from '@/components/AliasModal';
 import { ImportError, importExport } from '@/db/imports';
 import { getAccountByTag } from '@/db/queries';
 import { ExportParseError, parseExport, type ParsedExport } from '@/export';
 import { PERMISSION_HELP, syncNow } from '@/notifications';
+import { colors } from '@/theme';
 
 type Props = { onImported: () => void };
 
@@ -93,7 +95,7 @@ export function ImportButton({ onImported }: Props) {
 
 const styles = StyleSheet.create({
   button: {
-    backgroundColor: '#2563eb',
+    backgroundColor: colors.accentStrong,
     paddingVertical: 12,
     borderRadius: 10,
     alignItems: 'center',

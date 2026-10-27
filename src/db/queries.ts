@@ -43,6 +43,14 @@ export function getBuilderUpgrades(db: SQLiteDatabase, accountId: number): Promi
   );
 }
 
+/** Todas las mejoras en curso de una cuenta (constructores, laboratorio, mascotas…), por hora de fin. */
+export function getUpgrades(db: SQLiteDatabase, accountId: number): Promise<ActiveUpgrade[]> {
+  return db.getAllAsync<ActiveUpgrade>(
+    'SELECT * FROM active_upgrades WHERE account_id = ? ORDER BY ends_at',
+    accountId,
+  );
+}
+
 /** Mejoras de constructor de todas las cuentas. */
 export function getAllBuilderUpgrades(db: SQLiteDatabase): Promise<ActiveUpgrade[]> {
   return db.getAllAsync<ActiveUpgrade>(

@@ -10,7 +10,7 @@ Yo. Una sola persona, varias cuentas. La app no es pública en v1.
 
 ## Qué hace la app
 
-1. Muestra, por cuenta, qué está mejorando cada constructor y cuánto le falta.
+1. Muestra, por cuenta, todo lo que se está mejorando y cuánto le falta: constructores, laboratorio, casa de mascotas y, si aparecen en el export, base del constructor y otras mejoras. Con el nombre real de cada mejora.
 2. Muestra en una vista general cuál constructor queda libre primero entre todas las cuentas.
 3. Avisa con una notificación cuando un constructor queda libre.
 4. Guarda una lista ordenada de siguientes mejoras por cuenta.
@@ -26,7 +26,7 @@ Yo. Una sola persona, varias cuentas. La app no es pública en v1.
 
 ## Fuera de v1 (pero el parser debe guardar los datos)
 
-- Laboratorio, casa de mascotas, herrero y base del constructor.
+- Avisos de notificación para el laboratorio y la casa de mascotas (hoy solo avisan los constructores) y mostrarlos en la vista general.
 - Calcular niveles faltantes o "qué me falta para maxear" contra un catálogo del juego.
 - Widget de pantalla de inicio.
 - Sincronizar entre dispositivos.

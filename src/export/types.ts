@@ -8,11 +8,14 @@ export type ParsedUpgrade = {
   /** Clave del arreglo del export donde apareció (ej. "buildings", "heroes"). */
   source: string;
   gameId: number;
+  /** `lvl` del export: el nivel actual, antes de terminar la mejora. */
+  currentLevel: number | null;
   /**
-   * `lvl` tal como viene en el export. PENDIENTE: no se sabe si es el nivel
-   * actual o el nivel destino mientras la mejora está en curso.
+   * Nivel al que sube la mejora: `currentLevel + 1`. Se comprobó con los tiempos del catálogo:
+   * en 6 de 13 mejoras el `timer` es mayor que el tiempo total del nivel `lvl`, así que `lvl`
+   * no puede ser el destino (ver docs/formato-export.md).
    */
-  level: number | null;
+  targetLevel: number | null;
   remainingSeconds: number;
   /** Epoch UTC en segundos: capturedAt + remainingSeconds. */
   endsAt: number;

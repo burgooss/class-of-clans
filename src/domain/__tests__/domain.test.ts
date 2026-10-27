@@ -1,6 +1,6 @@
 import { BUILDER_HUT_ID } from '@/export/ids';
 
-import { displayTargetLevel, freeBuilderCount, LVL_IS_TARGET_LEVEL, nextFreeAt, runningUpgrades } from '../builders';
+import { freeBuilderCount, nextFreeAt, runningUpgrades } from '../builders';
 import { formatAgo, formatRemaining } from '../format';
 import { buildOverview } from '../overview';
 
@@ -28,13 +28,6 @@ describe('constructores libres', () => {
     const hut = up(NOW + 100, BUILDER_HUT_ID);
     expect(runningUpgrades([hut], NOW)).toHaveLength(1);
     expect(freeBuilderCount(3, [hut], NOW)).toBe(2);
-  });
-});
-
-describe('displayTargetLevel', () => {
-  it('respeta la suposición sobre lvl', () => {
-    expect(displayTargetLevel(null)).toBeNull();
-    expect(displayTargetLevel(6)).toBe(LVL_IS_TARGET_LEVEL ? 6 : 7);
   });
 });
 

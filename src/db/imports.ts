@@ -104,7 +104,7 @@ export async function importExport(
         exportId,
         upgrade.slotType,
         upgrade.gameId,
-        upgrade.level,
+        upgrade.targetLevel,
         upgrade.endsAt,
       );
     }

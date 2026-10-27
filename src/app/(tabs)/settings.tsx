@@ -1,12 +1,14 @@
 import { useSQLiteContext } from 'expo-sqlite';
 import { useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet } from 'react-native';
 
+import { Text } from '@/components/Text';
 import { BackupError, parseBackup, summarize } from '@/backup/format';
 import { pickBackupText, shareBackupFile } from '@/backup/files';
 import { createBackup, restoreBackup } from '@/db/backup';
 import { SCHEMA_VERSION } from '@/db/migrations';
 import { PERMISSION_HELP, syncNow } from '@/notifications';
+import { colors } from '@/theme';
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
@@ -99,9 +101,9 @@ const styles = StyleSheet.create({
   container: { padding: 16, gap: 12 },
   section: { fontSize: 20, fontWeight: '700' },
   note: { fontSize: 13, opacity: 0.7 },
-  button: { backgroundColor: '#2563eb', paddingVertical: 12, borderRadius: 10, alignItems: 'center', minHeight: 46, justifyContent: 'center' },
+  button: { backgroundColor: colors.accentStrong, paddingVertical: 12, borderRadius: 10, alignItems: 'center', minHeight: 46, justifyContent: 'center' },
   buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  buttonAlt: { paddingVertical: 12, borderRadius: 10, alignItems: 'center', borderWidth: 1, borderColor: '#2563eb' },
-  buttonAltText: { color: '#2563eb', fontSize: 16, fontWeight: '600' },
+  buttonAlt: { paddingVertical: 12, borderRadius: 10, alignItems: 'center', borderWidth: 1, borderColor: colors.accent },
+  buttonAltText: { color: colors.accent, fontSize: 16, fontWeight: '600' },
   disabled: { opacity: 0.5 },
 });

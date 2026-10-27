@@ -15,8 +15,10 @@ Botón "Pegar export" que lee el portapapeles.
 ## F2. Panel de una cuenta
 
 - Muestra alias, tag, nivel de ayuntamiento y número de constructores.
-- Lista cada constructor ocupado: qué mejora, a qué nivel y cuenta regresiva en vivo.
+- Lista cada constructor ocupado: nombre de la mejora (del catálogo, en inglés), nivel al que sube y cuenta regresiva en vivo.
 - Muestra los constructores libres como "Libre".
+- Muestra también las demás mejoras en curso, en su propia sección y solo si hay alguna: laboratorio (tropas), casa de mascotas, base del constructor y otras.
+- Las mejoras que ya terminaron según la hora actual (pero el export es anterior) aparecen como "✓ Terminó: …" dentro de su sección.
 - Muestra "Última actualización: hace X" y un aviso si el export tiene más de 24 h.
 - Permite renombrar la cuenta (el alias no puede quedar vacío).
 - Permite borrar la cuenta, con confirmación. Se borran sus exports, mejoras y sugerencias; sus bases y ejércitos quedan disponibles para todas las cuentas.

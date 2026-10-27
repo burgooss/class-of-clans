@@ -75,6 +75,11 @@ const MIGRATIONS: string[] = [
     created_at INTEGER NOT NULL
   );
   `,
+  // 2: `target_level` guardaba el `lvl` del export, que es el nivel ACTUAL; ahora guarda el
+  // nivel destino (lvl + 1). Solo corrige filas existentes: las nuevas ya se guardan bien.
+  `
+  UPDATE active_upgrades SET target_level = target_level + 1 WHERE target_level IS NOT NULL;
+  `,
 ];
 
 /** Versión actual del esquema (PRAGMA user_version tras migrar). */

@@ -1,19 +1,11 @@
-import { BUILDER_HUT_ID, TOWN_HALL_ID } from '@/export/ids';
+import { catalogName } from '@/catalog';
 
-import { displayTargetLevel } from './builders';
-
-// Solo los IDs confirmados. El resto necesita un catálogo (después de v1).
-const KNOWN_NAMES: Record<number, string> = {
-  [TOWN_HALL_ID]: 'Ayuntamiento',
-  [BUILDER_HUT_ID]: 'Cabaña de constructor',
-};
-
+/** Nombre legible de una mejora: el guardado, si lo hay; si no el del catálogo; si no, el ID. */
 export function upgradeName(gameId: number, name: string | null): string {
-  return name ?? KNOWN_NAMES[gameId] ?? `Mejora (ID ${gameId})`;
+  return name ?? catalogName(gameId) ?? `Mejora (ID ${gameId})`;
 }
 
-/** " → nivel N" para una mejora en curso, o cadena vacía si no hay nivel. */
-export function levelSuffix(storedLevel: number | null): string {
-  const level = displayTargetLevel(storedLevel);
-  return level === null ? '' : ` → nivel ${level}`;
+/** " → nivel N" para una mejora en curso (N es el nivel al que sube), o cadena vacía si no se conoce. */
+export function levelSuffix(targetLevel: number | null): string {
+  return targetLevel === null ? '' : ` → nivel ${targetLevel}`;
 }

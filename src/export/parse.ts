@@ -112,7 +112,8 @@ export function parseExport(
         slotType: slotFor(source),
         source,
         gameId: data,
-        level,
+        currentLevel: level,
+        targetLevel: level === null ? null : level + 1,
         remainingSeconds: timer,
         endsAt: capturedAt + Math.floor(timer),
       });

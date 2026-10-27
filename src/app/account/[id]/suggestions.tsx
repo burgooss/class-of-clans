@@ -1,8 +1,9 @@
 import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useMemo, useState } from 'react';
-import { Alert, FlatList, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
+import { Alert, FlatList, Pressable, StyleSheet, Switch, View } from 'react-native';
 
+import { Text } from '@/components/Text';
 import { SuggestionModal } from '@/components/SuggestionModal';
 import {
   addSuggestion,
@@ -16,6 +17,7 @@ import {
   updateSuggestion,
 } from '@/db/suggestions';
 import { nextStatus, STATUS_LABEL } from '@/domain/suggestions';
+import { colors } from '@/theme';
 
 // null = cerrado, 'new' = creando, Suggestion = editando.
 type FormState = null | 'new' | Suggestion;
@@ -169,7 +171,7 @@ const styles = StyleSheet.create({
   count: { fontSize: 15, fontWeight: '600' },
   hideRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   hideLabel: { fontSize: 14, opacity: 0.7 },
-  add: { backgroundColor: '#2563eb', paddingVertical: 12, borderRadius: 10, alignItems: 'center' },
+  add: { backgroundColor: colors.accentStrong, paddingVertical: 12, borderRadius: 10, alignItems: 'center' },
   addText: { color: '#fff', fontSize: 16, fontWeight: '600' },
   list: { gap: 8, paddingBottom: 16 },
   row: {
@@ -178,7 +180,7 @@ const styles = StyleSheet.create({
     gap: 12,
     padding: 14,
     borderRadius: 12,
-    backgroundColor: 'rgba(128,128,128,0.12)',
+    backgroundColor: colors.surface,
   },
   rowText: { flex: 1, gap: 4 },
   description: { fontSize: 16, fontWeight: '600' },
@@ -186,11 +188,11 @@ const styles = StyleSheet.create({
   notes: { fontSize: 13, opacity: 0.7 },
   chip: { alignSelf: 'flex-start', paddingVertical: 3, paddingHorizontal: 10, borderRadius: 12, marginTop: 2 },
   chipText: { fontSize: 12, fontWeight: '600' },
-  pending: { backgroundColor: 'rgba(128,128,128,0.25)' },
-  in_progress: { backgroundColor: '#fde68a' },
-  done: { backgroundColor: '#bbf7d0' },
+  pending: { backgroundColor: colors.chip },
+  in_progress: { backgroundColor: colors.progressBg },
+  done: { backgroundColor: colors.doneBg },
   arrows: { gap: 14, alignItems: 'center' },
-  arrow: { fontSize: 18, color: '#2563eb' },
+  arrow: { fontSize: 18, color: colors.accent },
   arrowOff: { opacity: 0.2 },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 8, padding: 24 },
   emptyTitle: { fontSize: 20, fontWeight: '600' },

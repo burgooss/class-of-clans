@@ -1,13 +1,15 @@
 import { Link, useFocusEffect } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useMemo, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 
+import { Text } from '@/components/Text';
 import { ImportButton } from '@/components/ImportButton';
 import { type Account, type ActiveUpgrade, getAccounts, getAllBuilderUpgrades } from '@/db/queries';
 import { buildOverview, type OverviewRow } from '@/domain/overview';
 import { formatRemaining } from '@/domain/format';
 import { useNow } from '@/hooks/useNow';
+import { colors } from '@/theme';
 
 function freeLabel(row: OverviewRow): string {
   if (row.freeNow === null) return 'Constructores: —';
@@ -86,11 +88,11 @@ export default function OverviewScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16, gap: 12 },
   list: { gap: 8, paddingBottom: 16 },
-  row: { padding: 16, borderRadius: 12, backgroundColor: 'rgba(128,128,128,0.12)', gap: 4 },
+  row: { padding: 16, borderRadius: 12, backgroundColor: colors.surface, gap: 4 },
   rowHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   alias: { fontSize: 16, fontWeight: '600' },
   free: { fontSize: 14, opacity: 0.7 },
-  freeOn: { color: '#15803d', opacity: 1, fontWeight: '600' },
+  freeOn: { color: colors.success, opacity: 1, fontWeight: '600' },
   next: { fontSize: 14, opacity: 0.7 },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 8, padding: 24 },
   emptyTitle: { fontSize: 20, fontWeight: '600' },

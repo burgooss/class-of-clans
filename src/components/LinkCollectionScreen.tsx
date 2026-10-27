@@ -1,11 +1,13 @@
 import { useFocusEffect } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useMemo, useState } from 'react';
-import { Alert, FlatList, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, FlatList, Linking, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
+import { Text } from '@/components/Text';
 import { LinkModal } from '@/components/LinkModal';
 import { addLink, deleteLink, getLinks, LinkError, type LinkInput, type SavedLink, updateLink } from '@/db/links';
 import { type Account, getAccounts } from '@/db/queries';
+import { colors } from '@/theme';
 import {
   CATEGORY_LABEL,
   type Collection,
@@ -187,12 +189,12 @@ export function LinkCollectionScreen({ collection }: { collection: Collection })
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16, gap: 12 },
-  add: { backgroundColor: '#2563eb', paddingVertical: 12, borderRadius: 10, alignItems: 'center' },
+  add: { backgroundColor: colors.accentStrong, paddingVertical: 12, borderRadius: 10, alignItems: 'center' },
   addText: { color: '#fff', fontSize: 16, fontWeight: '600' },
   filters: { gap: 8 },
   chipRow: { gap: 8 },
-  chip: { paddingVertical: 7, paddingHorizontal: 12, borderRadius: 20, backgroundColor: 'rgba(128,128,128,0.15)' },
-  chipOn: { backgroundColor: '#2563eb' },
+  chip: { paddingVertical: 7, paddingHorizontal: 12, borderRadius: 20, backgroundColor: colors.chip },
+  chipOn: { backgroundColor: colors.accentStrong },
   chipText: { fontSize: 14 },
   chipTextOn: { color: '#fff', fontWeight: '600' },
   list: { gap: 8, paddingBottom: 16 },
@@ -202,13 +204,13 @@ const styles = StyleSheet.create({
     gap: 12,
     padding: 14,
     borderRadius: 12,
-    backgroundColor: 'rgba(128,128,128,0.12)',
+    backgroundColor: colors.surface,
   },
   rowText: { flex: 1, gap: 2 },
   name: { fontSize: 16, fontWeight: '600' },
   meta: { fontSize: 13, opacity: 0.7 },
   notes: { fontSize: 13, opacity: 0.7, marginTop: 2 },
-  edit: { fontSize: 14, color: '#2563eb' },
+  edit: { fontSize: 14, color: colors.accent },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 8, padding: 24 },
   emptyTitle: { fontSize: 20, fontWeight: '600' },
   emptyNote: { fontSize: 14, opacity: 0.7, textAlign: 'center' },

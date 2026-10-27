@@ -1,22 +1,25 @@
 import { Link, router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
 
+import { Text } from '@/components/Text';
 import { AliasModal } from '@/components/AliasModal';
 import { AccountError, deleteAccount, renameAccount, setNotificationsEnabled } from '@/db/accounts';
 import {
   type Account,
   type ActiveUpgrade,
   getAccount,
-  getBuilderUpgrades,
+  getUpgrades,
   getLastCapturedAt,
 } from '@/db/queries';
-import { freeBuilderCount, runningUpgrades } from '@/domain/builders';
+import { freeBuilderCount } from '@/domain/builders';
 import { formatAgo, formatRemaining, STALE_EXPORT_SECONDS } from '@/domain/format';
 import { levelSuffix, upgradeName } from '@/domain/names';
+import { groupBySlot, SLOT_LABEL, SLOT_ORDER } from '@/domain/upgrades';
 import { useNow } from '@/hooks/useNow';
 import { PERMISSION_HELP, syncNow } from '@/notifications';
+import { colors } from '@/theme';
 
 type Data = { account: Account; upgrades: ActiveUpgrade[]; capturedAt: number | null };
 
@@ -33,7 +36,7 @@ export default function AccountScreen() {
     const account = await getAccount(db, accountId);
     if (!account) return setData(null);
     const [upgrades, capturedAt] = await Promise.all([
-      getBuilderUpgrades(db, accountId),
+      getUpgrades(db, accountId),
       getLastCapturedAt(db, accountId),
     ]);
     setData({ account, upgrades, capturedAt });
@@ -102,10 +105,11 @@ export default function AccountScreen() {
   if (!data) return null;
   const { account, upgrades, capturedAt } = data;
 
-  const timed = upgrades.map((u) => ({ ...u, gameId: u.game_id, endsAt: u.ends_at }));
-  const running = runningUpgrades(timed, now);
-  const finished = timed.filter((u) => u.endsAt <= now);
-  const free = freeBuilderCount(account.builder_count, timed, now) ?? 0;
+  const groups = groupBySlot(upgrades, now);
+  const builderTimed = upgrades
+    .filter((u) => u.slot_type === 'builder')
+    .map((u) => ({ gameId: u.game_id, endsAt: u.ends_at }));
+  const free = freeBuilderCount(account.builder_count, builderTimed, now) ?? 0;
   const stale = capturedAt !== null && now - capturedAt > STALE_EXPORT_SECONDS;
 
   return (
@@ -130,34 +134,42 @@ export default function AccountScreen() {
         <Switch value={account.notifications_on === 1} onValueChange={toggleNotifications} />
       </View>
 
-      <Text style={styles.section}>Constructores</Text>
-      {running.map((u) => (
-        <View key={u.id} style={styles.card}>
-          <View style={styles.cardText}>
-            <Text style={styles.name}>{upgradeName(u.game_id, u.name)}</Text>
-            <Text style={styles.detail}>{levelSuffix(u.target_level).trim()}</Text>
+      {SLOT_ORDER.map((slot) => {
+        const group = groups.find((g) => g.slot === slot);
+        // Constructores se muestra siempre (tiene los espacios libres); el resto, solo si hay algo.
+        if (!group && slot !== 'builder') return null;
+        const running = group?.running ?? [];
+        const finished = group?.finished ?? [];
+        const freeSlots = slot === 'builder' ? free : 0;
+        return (
+          <View key={slot} style={styles.group}>
+            <Text style={styles.section}>{SLOT_LABEL[slot]}</Text>
+            {running.map((u) => (
+              <View key={u.id} style={styles.card}>
+                <View style={styles.cardText}>
+                  <Text style={styles.name}>{upgradeName(u.game_id, u.name)}</Text>
+                  <Text style={styles.detail}>{levelSuffix(u.target_level).trim()}</Text>
+                </View>
+                <Text style={styles.countdown}>{formatRemaining(u.ends_at - now)}</Text>
+              </View>
+            ))}
+            {Array.from({ length: freeSlots }, (_, i) => (
+              <View key={`free-${i}`} style={[styles.card, styles.freeCard]}>
+                <Text style={styles.freeText}>Libre</Text>
+              </View>
+            ))}
+            {running.length === 0 && freeSlots === 0 && slot === 'builder' && (
+              <Text style={styles.meta}>Sin datos de constructores.</Text>
+            )}
+            {finished.map((u) => (
+              <Text key={u.id} style={styles.meta}>
+                ✓ Terminó: {upgradeName(u.game_id, u.name)}
+                {levelSuffix(u.target_level)}
+              </Text>
+            ))}
           </View>
-          <Text style={styles.countdown}>{formatRemaining(u.endsAt - now)}</Text>
-        </View>
-      ))}
-      {Array.from({ length: free }, (_, i) => (
-        <View key={`free-${i}`} style={[styles.card, styles.freeCard]}>
-          <Text style={styles.freeText}>Libre</Text>
-        </View>
-      ))}
-      {running.length === 0 && free === 0 && <Text style={styles.meta}>Sin datos de constructores.</Text>}
-
-      {finished.length > 0 && (
-        <>
-          <Text style={styles.section}>Terminadas desde el último export</Text>
-          {finished.map((u) => (
-            <Text key={u.id} style={styles.meta}>
-              ✓ {upgradeName(u.game_id, u.name)}
-              {levelSuffix(u.target_level)}
-            </Text>
-          ))}
-        </>
-      )}
+        );
+      })}
 
       <Link href={{ pathname: '/account/[id]/suggestions', params: { id } }} style={styles.link}>
         Sugerencias
@@ -186,10 +198,11 @@ export default function AccountScreen() {
 
 const styles = StyleSheet.create({
   container: { padding: 16, gap: 8 },
+  group: { gap: 8 },
   alias: { fontSize: 22, fontWeight: '700' },
   meta: { fontSize: 13, opacity: 0.7 },
-  warning: { backgroundColor: '#fef3c7', padding: 12, borderRadius: 10, marginTop: 4 },
-  warningText: { color: '#92400e', fontSize: 14 },
+  warning: { backgroundColor: colors.warningBg, padding: 12, borderRadius: 10, marginTop: 4 },
+  warningText: { color: colors.warningText, fontSize: 14 },
   section: { fontSize: 15, fontWeight: '600', marginTop: 16 },
   card: {
     flexDirection: 'row',
@@ -197,19 +210,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 14,
     borderRadius: 12,
-    backgroundColor: 'rgba(128,128,128,0.12)',
+    backgroundColor: colors.surface,
     gap: 12,
   },
   cardText: { flex: 1 },
   name: { fontSize: 15, fontWeight: '600' },
   detail: { fontSize: 13, opacity: 0.7 },
   countdown: { fontSize: 15, fontVariant: ['tabular-nums'], fontWeight: '600' },
-  freeCard: { backgroundColor: '#dcfce7' },
-  freeText: { color: '#15803d', fontSize: 15, fontWeight: '600' },
-  link: { marginTop: 24, fontSize: 16, color: '#2563eb' },
+  freeCard: { backgroundColor: colors.successBg },
+  freeText: { color: colors.success, fontSize: 15, fontWeight: '600' },
+  link: { marginTop: 24, fontSize: 16, color: colors.accent },
   switchRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginTop: 8 },
   switchLabel: { flex: 1, fontSize: 15 },
-  action: { padding: 14, borderRadius: 12, backgroundColor: 'rgba(128,128,128,0.12)' },
+  action: { padding: 14, borderRadius: 12, backgroundColor: colors.surface },
   actionText: { fontSize: 15, fontWeight: '600' },
-  danger: { color: '#b91c1c' },
+  danger: { color: colors.danger },
 });

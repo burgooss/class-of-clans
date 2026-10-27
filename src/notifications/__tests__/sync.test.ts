@@ -76,7 +76,7 @@ describe('syncNotifications', () => {
     expect(times(store)).toEqual([T0 + 600, T0 + 1200]);
     const first = [...store.values()].find((n) => n.at === T0 + 1200)!;
     expect(first.title).toBe('Granja TH12: constructor libre');
-    expect(first.body).toBe('Terminó: Mejora (ID 1000004) → nivel 3');
+    expect(first.body).toBe('Terminó: Gold Mine → nivel 4');
     const stored = await db.getAllAsync<{ notification_id: string | null; slot_type: string }>(
       'SELECT notification_id, slot_type FROM active_upgrades ORDER BY ends_at',
     );

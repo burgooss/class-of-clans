@@ -103,6 +103,18 @@ export class BackupError extends Error {
   }
 }
 
+// Conversiones de respaldos creados con un esquema anterior: la clave n convierte de n a n+1.
+// Cada vez que se agregue una migración en src/db/migrations.ts que cambie datos, añadir aquí
+// la conversión equivalente.
+const CONVERSIONS: Record<number, (tables: Record<TableName, Row[]>) => void> = {
+  // Esquema 2: target_level pasó de guardar el `lvl` del export (nivel actual) al nivel destino.
+  1: (tables) => {
+    for (const upgrade of tables.active_upgrades) {
+      if (typeof upgrade.target_level === 'number') upgrade.target_level += 1;
+    }
+  },
+};
+
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
@@ -186,7 +198,8 @@ function checkIntegrity(tables: Record<TableName, Row[]>): void {
  * Valida el texto de un respaldo y devuelve su contenido ya depurado (solo las columnas
  * conocidas). No toca nada: lanza `BackupError` con un mensaje en español si algo no cuadra.
  *
- * @param options.schemaVersion Versión actual del esquema de la app; el respaldo debe coincidir.
+ * @param options.schemaVersion Versión actual del esquema de la app. Un respaldo de un esquema
+ *   anterior se convierte al actual; uno de un esquema más nuevo se rechaza.
  */
 export function parseBackup(text: string, options: { schemaVersion: number }): Backup {
   let root: unknown;
@@ -207,7 +220,7 @@ export function parseBackup(text: string, options: { schemaVersion: number }): B
     throw new BackupError('unsupported_version', 'El respaldo se creó con una versión más nueva de la app. Actualiza la app e inténtalo de nuevo.');
   }
   if (typeof schemaVersion !== 'number' || !Number.isInteger(schemaVersion)) throw malformed('schemaVersion', 'debe ser un entero');
-  if (schemaVersion !== options.schemaVersion) {
+  if (schemaVersion < 1 || schemaVersion > options.schemaVersion) {
     throw new BackupError('unsupported_version', 'El respaldo es de una versión incompatible de la base de datos.');
   }
   if (typeof exportedAt !== 'number' || !Number.isInteger(exportedAt)) throw malformed('exportedAt', 'debe ser un entero');
@@ -223,7 +236,15 @@ export function parseBackup(text: string, options: { schemaVersion: number }): B
   }
   checkIntegrity(tables);
 
-  return { format: BACKUP_FORMAT, version, schemaVersion, exportedAt, tables };
+  for (let from = schemaVersion; from < options.schemaVersion; from++) {
+    const convert = CONVERSIONS[from];
+    if (!convert) {
+      throw new BackupError('unsupported_version', 'El respaldo es de una versión incompatible de la base de datos.');
+    }
+    convert(tables);
+  }
+
+  return { format: BACKUP_FORMAT, version, schemaVersion: options.schemaVersion, exportedAt, tables };
 }
 
 /** Cantidad de filas por tabla, para mostrar un resumen antes de restaurar. */

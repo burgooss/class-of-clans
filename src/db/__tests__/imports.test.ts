@@ -1,7 +1,7 @@
 import { parseExport } from '@/export';
 
 import { ImportError, importExport, MAX_EXPORTS_PER_ACCOUNT } from '../imports';
-import { migrateDb } from '../migrations';
+import { migrateDb, SCHEMA_VERSION } from '../migrations';
 import { getAccountByTag, getAllBuilderUpgrades, getBuilderUpgrades, getLastCapturedAt } from '../queries';
 import { createTestDb } from '../testing/nodeSqlite';
 
@@ -48,7 +48,30 @@ describe('migrateDb', () => {
       'suggestions',
     ]);
     const v = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
-    expect(v?.user_version).toBe(1);
+    expect(v?.user_version).toBe(SCHEMA_VERSION);
+  });
+});
+
+describe('migración 2: target_level pasa a ser el nivel destino', () => {
+  it('suma 1 a los niveles guardados con la semántica anterior y es idempotente', async () => {
+    const db = await setup();
+    // Se simula una base creada con la migración 1: nivel guardado tal cual venía en el export.
+    await db.runAsync("INSERT INTO accounts (tag, alias, created_at) VALUES ('#OLD111', 'Vieja', 1)");
+    await db.runAsync('INSERT INTO exports (account_id, captured_at, imported_at, raw_json) VALUES (1, 1, 1, ?)', '{}');
+    for (const level of [6, null]) {
+      await db.runAsync(
+        "INSERT INTO active_upgrades (account_id, export_id, slot_type, game_id, target_level, ends_at) VALUES (1, 1, 'builder', 1000003, ?, 99)",
+        level,
+      );
+    }
+    await db.execAsync('PRAGMA user_version = 1');
+
+    await migrateDb(db);
+    await migrateDb(db);
+
+    const rows = await db.getAllAsync<{ target_level: number | null }>('SELECT target_level FROM active_upgrades ORDER BY id');
+    expect(rows.map((r) => r.target_level)).toEqual([7, null]);
+    expect((await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version'))?.user_version).toBe(SCHEMA_VERSION);
   });
 });
 
@@ -78,8 +101,8 @@ describe('importExport: cuenta nueva', () => {
 
     const builder = await getBuilderUpgrades(db, result.accountId);
     expect(builder.map((u) => [u.game_id, u.ends_at, u.target_level])).toEqual([
-      [1000003, T0 + 600, 6],
-      [1000004, T0 + 1200, 3],
+      [1000003, T0 + 600, 7],
+      [1000004, T0 + 1200, 4],
     ]);
     expect(await getLastCapturedAt(db, result.accountId)).toBe(T0);
   });

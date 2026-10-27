@@ -99,9 +99,24 @@ describe('parseBackup: versiones', () => {
     expect(codeOf(() => parse(mutate((b) => void (b.version = BACKUP_VERSION + 1))))).toBe('unsupported_version');
   });
 
-  it('rechaza un esquema distinto al de la app', () => {
+  it('rechaza un esquema más nuevo que el de la app o inválido', () => {
     expect(codeOf(() => parse(mutate((b) => void (b.schemaVersion = SCHEMA + 1))))).toBe('unsupported_version');
-    expect(codeOf(() => parse(mutate((b) => void (b.schemaVersion = SCHEMA - 1))))).toBe('unsupported_version');
+    expect(codeOf(() => parse(mutate((b) => void (b.schemaVersion = 0))))).toBe('unsupported_version');
+  });
+
+  it('convierte un respaldo del esquema 1 al 2 sumando 1 a target_level de las mejoras', () => {
+    const old = sample(); // target_level = 6, esquema 1
+    old.tables.active_upgrades.push({ ...old.tables.active_upgrades[0], id: 2, target_level: null });
+    const result = parseBackup(text(old), { schemaVersion: 2 });
+    expect(result.schemaVersion).toBe(2);
+    expect(result.tables.active_upgrades.map((u) => u.target_level)).toEqual([7, null]);
+    // Las sugerencias tienen su propio target_level y no se tocan.
+    expect(result.tables.suggestions).toEqual(old.tables.suggestions);
+  });
+
+  it('un respaldo ya en el esquema actual no se convierte', () => {
+    const current = mutate((b) => void (b.schemaVersion = 2));
+    expect(parseBackup(text(current), { schemaVersion: 2 }).tables.active_upgrades[0].target_level).toBe(6);
   });
 });
 

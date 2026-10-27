@@ -42,8 +42,8 @@ Mejoras en curso, generadas por el parser a partir del último export de cada cu
 | export_id | INTEGER FK → exports.id | |
 | slot_type | TEXT | `builder`, `lab`, `pet_house`, `builder_base`, `other`. Lo decide el parser por la lista del export donde aparece el `timer` (ver `docs/formato-export.md`). |
 | game_id | INTEGER | ID del juego |
-| name | TEXT | Nombre legible si hay catálogo; si no, null |
-| target_level | INTEGER | Pendiente: el export trae `lvl` sin aclarar si es el nivel actual o el destino durante una mejora. El parser lo expone como `level`. |
+| name | TEXT | Nombre guardado, si lo hay; normalmente null: el nombre sale del catálogo (`src/catalog`) según `game_id` |
+| target_level | INTEGER | Nivel al que sube la mejora: `lvl` del export + 1 (el parser lo expone como `targetLevel`, y como `currentLevel` el `lvl` original). |
 | ends_at | INTEGER | `captured_at + segundos_restantes` |
 | notification_id | TEXT | ID de la notificación programada. Lo escribe y limpia `syncNotifications`; se pierde junto con la fila al reimportar. |
 
@@ -90,10 +90,11 @@ Mi cola de siguientes mejoras por cuenta.
 
 ## Reglas de cálculo
 
-Suposiciones provisionales (pendientes de confirmar, ver `docs/formato-export.md`):
+Suposición provisional (pendiente de confirmar, ver `docs/formato-export.md`):
 
 - Mejorar una cabaña de constructor ocupa un constructor como cualquier otra mejora `builder` (`HUT_UPGRADE_OCCUPIES_BUILDER`).
-- `lvl` de un elemento en mejora es el nivel destino y se guarda tal cual en `target_level` (`LVL_IS_TARGET_LEVEL`).
+
+Hecho comprobado: `lvl` de un elemento en mejora es su nivel **actual**; `active_upgrades.target_level` guarda el nivel destino (`lvl + 1`). Las filas guardadas antes de la migración 2 guardaban `lvl` tal cual y esa migración las corrigió.
 
 Reglas:
 

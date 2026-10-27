@@ -57,12 +57,20 @@ describe('parseExport (casos sintéticos)', () => {
     const by = (source: string) => result.upgrades.find((u) => u.source === source);
 
     expect(result.upgrades).toHaveLength(6);
-    expect(by('buildings')).toMatchObject({ slotType: 'builder', gameId: 1000003, level: 6, endsAt: 1_700_000_600 });
+    expect(by('buildings')).toMatchObject({ slotType: 'builder', gameId: 1000003, currentLevel: 6, targetLevel: 7, endsAt: 1_700_000_600 });
     expect(by('heroes')).toMatchObject({ slotType: 'builder', endsAt: 1_700_000_060 });
     expect(by('units')).toMatchObject({ slotType: 'lab', remainingSeconds: 30 });
     expect(by('pets')?.slotType).toBe('pet_house');
     expect(by('spells')?.slotType).toBe('other');
     expect(by('buildings2')?.slotType).toBe('builder_base');
+  });
+
+  it('el nivel destino es el nivel actual + 1, o null si el export no trae lvl', () => {
+    const result = parseExport(
+      minimalExport({ buildings: [{ data: 1000003, lvl: 9, timer: 10 }, { data: 1000004, timer: 20 }] }),
+      { now: NOW },
+    );
+    expect(result.upgrades.map((u) => [u.currentLevel, u.targetLevel])).toEqual([[9, 10], [null, null]]);
   });
 
   it('cuenta las cabañas individuales y las agrupadas', () => {
