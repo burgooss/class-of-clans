@@ -6,6 +6,7 @@ import { Alert, FlatList, Pressable, StyleSheet, Switch, View } from 'react-nati
 import { ResourcesModal } from '@/components/ResourcesModal';
 import { SuggestionModal } from '@/components/SuggestionModal';
 import { Text } from '@/components/Text';
+import { reportLoadError } from '@/db/closed';
 import { AccountError, setResources } from '@/db/accounts';
 import { type Account, getAccount, getLastExportJson } from '@/db/queries';
 import {
@@ -87,7 +88,7 @@ export default function SuggestionsScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      load();
+      load().catch(reportLoadError);
     }, [load]),
   );
 

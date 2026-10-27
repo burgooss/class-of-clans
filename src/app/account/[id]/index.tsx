@@ -5,6 +5,7 @@ import { Alert, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-na
 
 import { Text } from '@/components/Text';
 import { AliasModal } from '@/components/AliasModal';
+import { reportLoadError } from '@/db/closed';
 import { AccountError, deleteAccount, renameAccount, setNotificationsEnabled } from '@/db/accounts';
 import {
   type Account,
@@ -44,7 +45,7 @@ export default function AccountScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      load();
+      load().catch(reportLoadError);
     }, [load]),
   );
 

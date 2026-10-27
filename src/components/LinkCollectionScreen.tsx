@@ -5,6 +5,7 @@ import { Alert, FlatList, Linking, Pressable, ScrollView, StyleSheet, View } fro
 
 import { Text } from '@/components/Text';
 import { LinkModal } from '@/components/LinkModal';
+import { reportLoadError } from '@/db/closed';
 import { addLink, deleteLink, getLinks, LinkError, type LinkInput, type SavedLink, updateLink } from '@/db/links';
 import { type Account, getAccounts } from '@/db/queries';
 import { colors } from '@/theme';
@@ -47,7 +48,7 @@ export function LinkCollectionScreen({ collection }: { collection: Collection })
 
   useFocusEffect(
     useCallback(() => {
-      load();
+      load().catch(reportLoadError);
     }, [load]),
   );
 

@@ -102,7 +102,10 @@ async function ensureChannel(api: Api): Promise<boolean> {
     });
     channelState = 'ready';
   } catch (error) {
-    console.warn('No se pudo crear el canal de notificaciones; se usará el canal por defecto.', error);
+    // Pasa en Expo Go 58 de Android (el módulo nativo falla con un NullPointerException) y no es un
+    // error de la app: los avisos siguen llegando por el canal por defecto. Se registra con `log` y no
+    // con `warn` para que no salga un aviso amarillo en pantalla en cada arranque.
+    console.log('No se pudo crear el canal de notificaciones; se usará el canal por defecto.', error);
     channelState = 'failed';
   }
   return channelState === 'ready';

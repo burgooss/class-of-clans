@@ -5,6 +5,7 @@ import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 
 import { Text } from '@/components/Text';
 import { ImportButton } from '@/components/ImportButton';
+import { reportLoadError } from '@/db/closed';
 import { type Account, type ActiveUpgrade, getAccounts, getAllUpgrades } from '@/db/queries';
 import { buildOverview, type OverviewRow, type OverviewUpgrade } from '@/domain/overview';
 import { SLOT_LABEL } from '@/domain/upgrades';
@@ -31,7 +32,7 @@ export default function OverviewScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      load();
+      load().catch(reportLoadError);
     }, [load]),
   );
 

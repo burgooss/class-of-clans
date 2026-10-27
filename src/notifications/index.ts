@@ -1,5 +1,7 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
+import { isClosedDbError } from '@/db/closed';
+
 import { expoNotifier } from './expoNotifier';
 import { type SyncResult, syncNotifications } from './sync';
 
@@ -15,7 +17,8 @@ export async function syncNow(db: SQLiteDatabase): Promise<SyncResult | null> {
   try {
     return await syncNotifications(db, expoNotifier, Math.floor(Date.now() / 1000));
   } catch (error) {
-    console.warn('No se pudieron sincronizar las notificaciones', error);
+    // Si la base se cerró (recarga en caliente) no hay nada que avisar: se sincroniza al volver a abrir.
+    if (!isClosedDbError(error)) console.warn('No se pudieron sincronizar las notificaciones', error);
     return null;
   }
 }
