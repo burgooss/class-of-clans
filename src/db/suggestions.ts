@@ -1,5 +1,6 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
+import { catalogLevels } from '@/catalog';
 import { moveWithin, parseTargetLevel, type SuggestionStatus } from '@/domain/suggestions';
 
 export type Suggestion = {
@@ -11,6 +12,8 @@ export type Suggestion = {
   status: SuggestionStatus;
   notes: string | null;
   created_at: number;
+  /** Elemento del catálogo (para calcular el costo), o null si es una sugerencia de texto libre. */
+  game_id: number | null;
 };
 
 export type SuggestionInput = {
@@ -20,9 +23,11 @@ export type SuggestionInput = {
   notes?: string;
   /** Solo al editar. Al crear siempre empieza como pendiente. */
   status?: SuggestionStatus;
+  /** Elemento del catálogo. null lo quita; sin indicar, al editar se conserva el que tenía. */
+  gameId?: number | null;
 };
 
-export type SuggestionErrorCode = 'description_required' | 'invalid_level' | 'not_found';
+export type SuggestionErrorCode = 'description_required' | 'invalid_level' | 'invalid_item' | 'not_found';
 
 export class SuggestionError extends Error {
   readonly code: SuggestionErrorCode;
@@ -34,15 +39,29 @@ export class SuggestionError extends Error {
   }
 }
 
-function validate(input: SuggestionInput): { description: string; targetLevel: number | null; notes: string | null } {
+function validate(input: SuggestionInput): {
+  description: string;
+  targetLevel: number | null;
+  notes: string | null;
+  gameId: number | null | undefined;
+} {
   const description = input.description.trim();
   if (!description) throw new SuggestionError('description_required', 'Escribe una descripción.');
 
   const level = parseTargetLevel(input.targetLevel ?? '');
   if (!level.ok) throw new SuggestionError('invalid_level', 'El nivel objetivo debe ser un número entre 1 y 999.');
 
+  const { gameId } = input;
+  if (gameId !== undefined && gameId !== null) {
+    const levels = catalogLevels(gameId);
+    if (levels.length === 0) throw new SuggestionError('invalid_item', 'Ese elemento no está en el catálogo.');
+    if (level.value !== null && level.value > levels.length) {
+      throw new SuggestionError('invalid_level', `Este elemento llega hasta el nivel ${levels.length}.`);
+    }
+  }
+
   const notes = input.notes?.trim() || null;
-  return { description, targetLevel: level.value, notes };
+  return { description, targetLevel: level.value, notes, gameId };
 }
 
 /** Cola de una cuenta, en el orden que armó el usuario. */
@@ -60,43 +79,40 @@ export async function addSuggestion(
   input: SuggestionInput,
   now: number,
 ): Promise<number> {
-  const { description, targetLevel, notes } = validate(input);
+  const { description, targetLevel, notes, gameId } = validate(input);
   const last = await db.getFirstAsync<{ max_position: number | null }>(
     'SELECT MAX(position) AS max_position FROM suggestions WHERE account_id = ?',
     accountId,
   );
   const result = await db.runAsync(
-    `INSERT INTO suggestions (account_id, description, target_level, position, status, notes, created_at)
-     VALUES (?, ?, ?, ?, 'pending', ?, ?)`,
+    `INSERT INTO suggestions (account_id, description, target_level, position, status, notes, created_at, game_id)
+     VALUES (?, ?, ?, ?, 'pending', ?, ?, ?)`,
     accountId,
     description,
     targetLevel,
     (last?.max_position ?? 0) + 1,
     notes,
     now,
+    gameId ?? null,
   );
   return result.lastInsertRowId;
 }
 
-/** Edita descripción, nivel, notas y (si se indica) estado. No cambia su lugar en la cola. */
+/** Edita descripción, nivel, notas y, si se indican, estado y elemento. No cambia su lugar en la cola. */
 export async function updateSuggestion(db: SQLiteDatabase, id: number, input: SuggestionInput): Promise<void> {
-  const { description, targetLevel, notes } = validate(input);
-  const result = input.status
-    ? await db.runAsync(
-        'UPDATE suggestions SET description = ?, target_level = ?, notes = ?, status = ? WHERE id = ?',
-        description,
-        targetLevel,
-        notes,
-        input.status,
-        id,
-      )
-    : await db.runAsync(
-        'UPDATE suggestions SET description = ?, target_level = ?, notes = ? WHERE id = ?',
-        description,
-        targetLevel,
-        notes,
-        id,
-      );
+  const { description, targetLevel, notes, gameId } = validate(input);
+  // Los fragmentos de SQL son fijos; solo los valores vienen del usuario.
+  const sets = ['description = ?', 'target_level = ?', 'notes = ?'];
+  const params: (string | number | null)[] = [description, targetLevel, notes];
+  if (input.status) {
+    sets.push('status = ?');
+    params.push(input.status);
+  }
+  if (gameId !== undefined) {
+    sets.push('game_id = ?');
+    params.push(gameId);
+  }
+  const result = await db.runAsync(`UPDATE suggestions SET ${sets.join(', ')} WHERE id = ?`, ...params, id);
   if (result.changes === 0) throw new SuggestionError('not_found', 'La sugerencia ya no existe.');
 }
 

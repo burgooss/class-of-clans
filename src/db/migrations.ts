@@ -80,18 +80,31 @@ const MIGRATIONS: string[] = [
   `
   UPDATE active_upgrades SET target_level = target_level + 1 WHERE target_level IS NOT NULL;
   `,
+  // 3: recursos que escribe el usuario (null = no registrado) y elemento del catálogo en las
+  // sugerencias, para calcular su costo.
+  `
+  ALTER TABLE accounts ADD COLUMN gold INTEGER;
+  ALTER TABLE accounts ADD COLUMN elixir INTEGER;
+  ALTER TABLE accounts ADD COLUMN dark_elixir INTEGER;
+  ALTER TABLE accounts ADD COLUMN resources_updated_at INTEGER;
+  ALTER TABLE suggestions ADD COLUMN game_id INTEGER;
+  `,
 ];
 
 /** Versión actual del esquema (PRAGMA user_version tras migrar). */
 export const SCHEMA_VERSION = MIGRATIONS.length;
 
-export async function migrateDb(db: SQLiteDatabase): Promise<void> {
+/**
+ * Lleva la base a la última versión del esquema. `upTo` (solo para pruebas) detiene la migración
+ * en una versión anterior para simular una base vieja.
+ */
+export async function migrateDb(db: SQLiteDatabase, upTo: number = MIGRATIONS.length): Promise<void> {
   await db.execAsync('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
 
   const row = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
   const current = row?.user_version ?? 0;
 
-  for (let version = current; version < MIGRATIONS.length; version++) {
+  for (let version = current; version < upTo; version++) {
     await db.withExclusiveTransactionAsync(async (txn) => {
       await txn.execAsync(MIGRATIONS[version]);
       await txn.execAsync(`PRAGMA user_version = ${version + 1}`);

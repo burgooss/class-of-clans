@@ -1,6 +1,6 @@
 import { parseExport } from '@/export';
 
-import { AccountError, deleteAccount, renameAccount } from '../accounts';
+import { AccountError, deleteAccount, renameAccount, setResources } from '../accounts';
 import { importExport } from '../imports';
 import { migrateDb } from '../migrations';
 import { createTestDb } from '../testing/nodeSqlite';
@@ -78,6 +78,43 @@ describe('renameAccount', () => {
     const { db } = await setup();
     await expect(renameAccount(db, 999, 'X')).rejects.toBeInstanceOf(AccountError);
     await expect(renameAccount(db, 999, 'X')).rejects.toMatchObject({ code: 'not_found' });
+  });
+});
+
+describe('setResources', () => {
+  const row = async (db: Awaited<ReturnType<typeof setup>>['db'], id: number) =>
+    db.getFirstAsync<Record<string, unknown>>('SELECT gold, elixir, dark_elixir, resources_updated_at FROM accounts WHERE id = ?', id);
+
+  it('guarda los recursos y la hora en que se escribieron', async () => {
+    const { db, ids } = await setup();
+    await setResources(db, ids[0], { gold: 1_500_000, elixir: 0, dark: 85_000 }, T0 + 50);
+    expect(await row(db, ids[0])).toEqual({ gold: 1_500_000, elixir: 0, dark_elixir: 85_000, resources_updated_at: T0 + 50 });
+  });
+
+  it('null deja un recurso como no registrado y 0 es un valor válido', async () => {
+    const { db, ids } = await setup();
+    await setResources(db, ids[0], { gold: 10, elixir: 20, dark: 30 }, T0);
+    await setResources(db, ids[0], { gold: null, elixir: 0, dark: null }, T0 + 1);
+    expect(await row(db, ids[0])).toEqual({ gold: null, elixir: 0, dark_elixir: null, resources_updated_at: T0 + 1 });
+  });
+
+  it('no toca otras cuentas ni otros datos de la cuenta', async () => {
+    const { db, ids } = await setup();
+    await setResources(db, ids[0], { gold: 5, elixir: 5, dark: 5 }, T0);
+    expect(await row(db, ids[1])).toEqual({ gold: null, elixir: null, dark_elixir: null, resources_updated_at: null });
+    expect((await db.getFirstAsync<{ alias: string }>('SELECT alias FROM accounts WHERE id = ?', ids[0]))?.alias).toBe('Cuenta 0');
+  });
+
+  it.each([-1, 1.5, Number.NaN, 10_000_000_000])('rechaza %p sin cambiar nada', async (bad) => {
+    const { db, ids } = await setup();
+    await setResources(db, ids[0], { gold: 7, elixir: 7, dark: 7 }, T0);
+    await expect(setResources(db, ids[0], { gold: bad, elixir: 1, dark: 1 }, T0 + 9)).rejects.toMatchObject({ code: 'invalid_amount' });
+    expect(await row(db, ids[0])).toEqual({ gold: 7, elixir: 7, dark_elixir: 7, resources_updated_at: T0 });
+  });
+
+  it('avisa si la cuenta no existe', async () => {
+    const { db } = await setup();
+    await expect(setResources(db, 999, { gold: 1, elixir: 1, dark: 1 }, T0)).rejects.toMatchObject({ code: 'not_found' });
   });
 });
 

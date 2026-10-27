@@ -148,6 +148,56 @@ describe('moveSuggestion', () => {
   });
 });
 
+describe('sugerencias con elemento del catálogo', () => {
+  const INFERNO = 1000027;
+
+  it('guarda el elemento y su nivel objetivo', async () => {
+    const { db, ids } = await setup();
+    await addSuggestion(db, ids[0], { description: 'Torre infernal', gameId: INFERNO, targetLevel: '8' }, T0);
+    await addSuggestion(db, ids[0], { description: 'Texto libre' }, T0);
+    const [a, b] = await getSuggestions(db, ids[0]);
+    expect([a.game_id, a.target_level, b.game_id]).toEqual([INFERNO, 8, null]);
+  });
+
+  it('rechaza un elemento que no está en el catálogo o no tiene costos', async () => {
+    const { db, ids } = await setup();
+    for (const gameId of [999, 90000000]) {
+      await expect(addSuggestion(db, ids[0], { description: 'X', gameId }, T0)).rejects.toMatchObject({ code: 'invalid_item' });
+    }
+    expect(await names(db, ids[0])).toEqual([]);
+  });
+
+  it('rechaza un nivel que el elemento no alcanza, diciendo hasta cuál llega', async () => {
+    const { db, ids } = await setup();
+    const error = await addSuggestion(db, ids[0], { description: 'X', gameId: INFERNO, targetLevel: '99' }, T0).catch((e) => e);
+    expect(error).toBeInstanceOf(SuggestionError);
+    expect(error.code).toBe('invalid_level');
+    expect(error.message).toMatch(/llega hasta el nivel \d+/);
+  });
+
+  it('al editar: sin indicar elemento se conserva, null lo quita y otro id lo cambia', async () => {
+    const { db, ids } = await setup();
+    const id = await addSuggestion(db, ids[0], { description: 'Torre', gameId: INFERNO, targetLevel: '5' }, T0);
+    const gameId = async () => (await getSuggestions(db, ids[0]))[0].game_id;
+
+    await updateSuggestion(db, id, { description: 'Torre editada', targetLevel: '6' });
+    expect(await gameId()).toBe(INFERNO);
+
+    await updateSuggestion(db, id, { description: 'Torre', targetLevel: '6', gameId: 1000013 });
+    expect(await gameId()).toBe(1000013);
+
+    await updateSuggestion(db, id, { description: 'Texto', targetLevel: '', gameId: null });
+    expect(await gameId()).toBeNull();
+  });
+
+  it('al editar valida el nivel contra el elemento indicado y no cambia nada si falla', async () => {
+    const { db, ids } = await setup();
+    const id = await addSuggestion(db, ids[0], { description: 'Torre', gameId: INFERNO, targetLevel: '5' }, T0);
+    await expect(updateSuggestion(db, id, { description: 'Torre', targetLevel: '99', gameId: INFERNO })).rejects.toMatchObject({ code: 'invalid_level' });
+    expect((await getSuggestions(db, ids[0]))[0].target_level).toBe(5);
+  });
+});
+
 describe('deleteSuggestion', () => {
   it('borra y deja las posiciones consecutivas', async () => {
     const { db, ids } = await setup();

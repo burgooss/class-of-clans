@@ -9,6 +9,12 @@ export type Account = {
   notifications_on: number;
   last_export_id: number | null;
   created_at: number;
+  /** Recursos que escribió el usuario; null = no registrado. */
+  gold: number | null;
+  elixir: number | null;
+  dark_elixir: number | null;
+  /** Hora (epoch, segundos) en que los escribió. */
+  resources_updated_at: number | null;
 };
 
 export type ActiveUpgrade = {
@@ -51,11 +57,27 @@ export function getUpgrades(db: SQLiteDatabase, accountId: number): Promise<Acti
   );
 }
 
+/** Todas las mejoras en curso de todas las cuentas, de cualquier tipo de espacio. */
+export function getAllUpgrades(db: SQLiteDatabase): Promise<ActiveUpgrade[]> {
+  return db.getAllAsync<ActiveUpgrade>('SELECT * FROM active_upgrades ORDER BY ends_at');
+}
+
 /** Mejoras de constructor de todas las cuentas. */
 export function getAllBuilderUpgrades(db: SQLiteDatabase): Promise<ActiveUpgrade[]> {
   return db.getAllAsync<ActiveUpgrade>(
     "SELECT * FROM active_upgrades WHERE slot_type = 'builder' ORDER BY ends_at",
   );
+}
+
+/** JSON crudo del último export de la cuenta, o null si no tiene. */
+export async function getLastExportJson(db: SQLiteDatabase, accountId: number): Promise<string | null> {
+  const row = await db.getFirstAsync<{ raw_json: string }>(
+    `SELECT e.raw_json
+       FROM accounts a JOIN exports e ON e.id = a.last_export_id
+      WHERE a.id = ?`,
+    accountId,
+  );
+  return row?.raw_json ?? null;
 }
 
 /** Hora (epoch, segundos) del último export de la cuenta, o null si no tiene. */

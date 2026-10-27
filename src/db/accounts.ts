@@ -1,6 +1,8 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
-export type AccountErrorCode = 'alias_required' | 'not_found';
+import { MAX_AMOUNT, type Resources } from '@/domain/resources';
+
+export type AccountErrorCode = 'alias_required' | 'not_found' | 'invalid_amount';
 
 export class AccountError extends Error {
   readonly code: AccountErrorCode;
@@ -58,5 +60,26 @@ export async function deleteAccount(db: SQLiteDatabase, accountId: number): Prom
 /** Activa o desactiva los avisos de una cuenta (F4). Después hay que sincronizar las notificaciones. */
 export async function setNotificationsEnabled(db: SQLiteDatabase, accountId: number, enabled: boolean): Promise<void> {
   const result = await db.runAsync('UPDATE accounts SET notifications_on = ? WHERE id = ?', enabled ? 1 : 0, accountId);
+  if (result.changes === 0) throw new AccountError('not_found', 'La cuenta ya no existe.');
+}
+
+/**
+ * Guarda los recursos que escribió el usuario (null = no registrado) y la hora en que lo hizo.
+ * La app no los puede leer del juego: el export no los trae.
+ */
+export async function setResources(db: SQLiteDatabase, accountId: number, resources: Resources, now: number): Promise<void> {
+  for (const value of [resources.gold, resources.elixir, resources.dark]) {
+    if (value !== null && (!Number.isInteger(value) || value < 0 || value > MAX_AMOUNT)) {
+      throw new AccountError('invalid_amount', 'Las cantidades deben ser números enteros de 0 en adelante.');
+    }
+  }
+  const result = await db.runAsync(
+    'UPDATE accounts SET gold = ?, elixir = ?, dark_elixir = ?, resources_updated_at = ? WHERE id = ?',
+    resources.gold,
+    resources.elixir,
+    resources.dark,
+    now,
+    accountId,
+  );
   if (result.changes === 0) throw new AccountError('not_found', 'La cuenta ya no existe.');
 }

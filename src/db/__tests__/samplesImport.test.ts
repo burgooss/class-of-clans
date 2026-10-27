@@ -1,12 +1,12 @@
 import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 
-import { buildOverview } from '@/domain/overview';
+import { buildOverview, type OverviewUpgrade } from '@/domain/overview';
 import { parseExport } from '@/export';
 
 import { importExport } from '../imports';
 import { migrateDb } from '../migrations';
-import { getAccounts, getAllBuilderUpgrades } from '../queries';
+import { getAccounts, getAllUpgrades } from '../queries';
 import { createTestDb } from '../testing/nodeSqlite';
 
 // samples/ está en .gitignore (datos personales). Sin la carpeta, la prueba se salta.
@@ -34,10 +34,10 @@ run('importa las 3 cuentas reales y arma la vista general', async () => {
     [4, 2],
   ]);
 
-  const upgrades = await getAllBuilderUpgrades(db);
-  const byAccount = new Map<number, { gameId: number; endsAt: number }[]>();
+  const upgrades = await getAllUpgrades(db);
+  const byAccount = new Map<number, OverviewUpgrade[]>();
   for (const u of upgrades) {
-    byAccount.set(u.account_id, [...(byAccount.get(u.account_id) ?? []), { gameId: u.game_id, endsAt: u.ends_at }]);
+    byAccount.set(u.account_id, [...(byAccount.get(u.account_id) ?? []), { gameId: u.game_id, endsAt: u.ends_at, slot: u.slot_type }]);
   }
   const overview = (now: number) =>
     buildOverview(

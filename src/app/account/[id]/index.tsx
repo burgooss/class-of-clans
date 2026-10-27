@@ -130,7 +130,7 @@ export default function AccountScreen() {
       )}
 
       <View style={styles.switchRow}>
-        <Text style={styles.switchLabel}>Avisarme cuando un constructor quede libre</Text>
+        <Text style={styles.switchLabel}>Avisarme cuando termine una mejora (constructores, laboratorio y mascotas)</Text>
         <Switch value={account.notifications_on === 1} onValueChange={toggleNotifications} />
       </View>
 

@@ -52,10 +52,10 @@ describe('migrateDb', () => {
   });
 });
 
-describe('migración 2: target_level pasa a ser el nivel destino', () => {
-  it('suma 1 a los niveles guardados con la semántica anterior y es idempotente', async () => {
-    const db = await setup();
-    // Se simula una base creada con la migración 1: nivel guardado tal cual venía en el export.
+describe('migraciones sobre una base con datos', () => {
+  async function oldDb(version: number) {
+    const db = createTestDb();
+    await migrateDb(db, version);
     await db.runAsync("INSERT INTO accounts (tag, alias, created_at) VALUES ('#OLD111', 'Vieja', 1)");
     await db.runAsync('INSERT INTO exports (account_id, captured_at, imported_at, raw_json) VALUES (1, 1, 1, ?)', '{}');
     for (const level of [6, null]) {
@@ -64,14 +64,39 @@ describe('migración 2: target_level pasa a ser el nivel destino', () => {
         level,
       );
     }
-    await db.execAsync('PRAGMA user_version = 1');
+    await db.runAsync("INSERT INTO suggestions (account_id, description, position, created_at) VALUES (1, 'Torre', 1, 1)");
+    return db;
+  }
+
+  const levels = async (db: Awaited<ReturnType<typeof oldDb>>) =>
+    (await db.getAllAsync<{ target_level: number | null }>('SELECT target_level FROM active_upgrades ORDER BY id')).map((r) => r.target_level);
+
+  it('la migración 2 suma 1 a los niveles guardados con la semántica anterior', async () => {
+    const db = await oldDb(1);
+    expect(await levels(db)).toEqual([6, null]);
 
     await migrateDb(db);
-    await migrateDb(db);
 
-    const rows = await db.getAllAsync<{ target_level: number | null }>('SELECT target_level FROM active_upgrades ORDER BY id');
-    expect(rows.map((r) => r.target_level)).toEqual([7, null]);
+    expect(await levels(db)).toEqual([7, null]);
     expect((await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version'))?.user_version).toBe(SCHEMA_VERSION);
+  });
+
+  it('migrar de nuevo no vuelve a sumar', async () => {
+    const db = await oldDb(1);
+    await migrateDb(db);
+    await migrateDb(db);
+    expect(await levels(db)).toEqual([7, null]);
+  });
+
+  it('la migración 3 agrega recursos y game_id vacíos sin tocar lo que ya había', async () => {
+    const db = await oldDb(2);
+    await migrateDb(db);
+
+    const account = await db.getFirstAsync<Record<string, unknown>>('SELECT alias, gold, elixir, dark_elixir, resources_updated_at FROM accounts');
+    expect(account).toEqual({ alias: 'Vieja', gold: null, elixir: null, dark_elixir: null, resources_updated_at: null });
+    const suggestion = await db.getFirstAsync<Record<string, unknown>>('SELECT description, game_id FROM suggestions');
+    expect(suggestion).toEqual({ description: 'Torre', game_id: null });
+    expect(await levels(db)).toEqual([6, null]); // la migración 3 no toca los niveles
   });
 });
 

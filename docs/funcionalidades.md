@@ -27,11 +27,12 @@ Botón "Pegar export" que lee el portapapeles.
 
 - Lista todas las cuentas ordenadas por el constructor que queda libre primero.
 - Cada fila: alias, cuántos constructores libres ahora, y cuándo se libera el siguiente.
+- Si la cuenta tiene algo en curso en el laboratorio o en la casa de mascotas, la fila también muestra cuándo termina lo más próximo de cada uno.
 - Tocar una fila abre el panel de esa cuenta.
 
 ## F4. Notificaciones
 
-- Una notificación local cuando termina cada mejora: "Granja TH12: constructor libre".
+- Una notificación local cuando termina cada mejora de constructores, laboratorio o casa de mascotas: "Granja TH12: constructor libre", "Granja TH12: laboratorio libre", "Granja TH12: casa de mascotas libre". El cuerpo dice qué terminó y a qué nivel.
 - Se pueden activar o desactivar por cuenta.
 - Al reimportar una cuenta se cancelan sus notificaciones anteriores y se crean las nuevas.
 - Una mejora que ya terminó no avisa. Si el usuario niega el permiso del sistema, la app lo indica al importar o al activar el aviso.
@@ -44,6 +45,16 @@ Por cuenta, una lista que yo armo de lo que quiero mejorar después.
 - Cada sugerencia nueva se agrega al final de la cola. Tocar la etiqueta de estado lo cambia (pendiente → en curso → hecha); el estado también se edita en el formulario.
 - Cada sugerencia: descripción, nivel objetivo opcional, notas, estado (pendiente / en curso / hecha).
 - Las hechas se pueden ocultar.
+
+### Recursos y costo de las sugerencias
+
+El export del juego no trae los recursos, así que los escribe el usuario.
+
+- En la pantalla de sugerencias de cada cuenta hay un recuadro "Tus recursos" (oro, elixir y elixir oscuro) con "Editar". Acepta `1.5M`, `850k` o `1,234,567`; vacío significa no registrado. Muestra cuándo se escribieron.
+- Una sugerencia puede ligarse a un elemento del catálogo ("Elegir del catálogo", con búsqueda en español o inglés). Al elegirlo propone el nivel siguiente al que tiene en el último export.
+- Las sugerencias con elemento muestran el costo hasta el nivel objetivo (con el tiempo total) y si alcanza ("✓ Te alcanza" o "Faltan 1.1M de elixir"). Encima de la lista se destaca la primera de la cola con costo por pagar.
+- Las sugerencias de texto libre siguen funcionando como antes, sin costo.
+- Limitaciones: el costo no incluye descuentos, y los recursos escritos se desactualizan: hay que volver a escribirlos. El costo de elementos de la base del constructor y del equipo de héroe no se calcula.
 
 ## F6. Bases
 

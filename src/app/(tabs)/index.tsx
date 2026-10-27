@@ -5,8 +5,9 @@ import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 
 import { Text } from '@/components/Text';
 import { ImportButton } from '@/components/ImportButton';
-import { type Account, type ActiveUpgrade, getAccounts, getAllBuilderUpgrades } from '@/db/queries';
-import { buildOverview, type OverviewRow } from '@/domain/overview';
+import { type Account, type ActiveUpgrade, getAccounts, getAllUpgrades } from '@/db/queries';
+import { buildOverview, type OverviewRow, type OverviewUpgrade } from '@/domain/overview';
+import { SLOT_LABEL } from '@/domain/upgrades';
 import { formatRemaining } from '@/domain/format';
 import { useNow } from '@/hooks/useNow';
 import { colors } from '@/theme';
@@ -23,7 +24,7 @@ export default function OverviewScreen() {
   const [upgrades, setUpgrades] = useState<ActiveUpgrade[]>([]);
 
   const load = useCallback(async () => {
-    const [accountRows, upgradeRows] = await Promise.all([getAccounts(db), getAllBuilderUpgrades(db)]);
+    const [accountRows, upgradeRows] = await Promise.all([getAccounts(db), getAllUpgrades(db)]);
     setAccounts(accountRows);
     setUpgrades(upgradeRows);
   }, [db]);
@@ -35,10 +36,10 @@ export default function OverviewScreen() {
   );
 
   const rows = useMemo(() => {
-    const byAccount = new Map<number, { gameId: number; endsAt: number }[]>();
+    const byAccount = new Map<number, OverviewUpgrade[]>();
     for (const u of upgrades) {
       const list = byAccount.get(u.account_id) ?? [];
-      list.push({ gameId: u.game_id, endsAt: u.ends_at });
+      list.push({ gameId: u.game_id, endsAt: u.ends_at, slot: u.slot_type });
       byAccount.set(u.account_id, list);
     }
     return buildOverview(
@@ -76,6 +77,11 @@ export default function OverviewScreen() {
                     ? 'Sin mejoras en curso'
                     : `Siguiente en ${formatRemaining(item.nextFreeAt - now)}`}
                 </Text>
+                {item.extras.map((extra) => (
+                  <Text key={extra.slot} style={styles.next}>
+                    {SLOT_LABEL[extra.slot]}: {formatRemaining(extra.endsAt - now)}
+                  </Text>
+                ))}
               </Pressable>
             </Link>
           )}

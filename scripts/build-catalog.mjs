@@ -1,7 +1,11 @@
-// Genera src/catalog/catalog.json: nombre, categoría y base de cada elemento del juego, por ID.
+// Genera src/catalog/catalog.json: nombre (en inglés), categoría, base y costo/tiempo por nivel de
+// cada elemento del juego, por ID.
 //
 // Fuente: el paquete comunitario `clash-of-clans-data` (MIT). Cada entrada trae `dataId`, el mismo
-// número que usa el export del juego. Solo se copian los campos mínimos (no costos ni imágenes).
+// número que usa el export del juego. Solo se copian los campos mínimos (no imágenes ni estadísticas).
+//
+// Formato de cada elemento: [nombre, categoría, base, niveles]. `niveles[i]` es el nivel i+1 y
+// vale [costo, recurso, segundos]; está vacío si el paquete no trae costos (ej. equipo de héroe).
 //
 // Uso:
 //   npm pack clash-of-clans-data && tar -xzf clash-of-clans-data-*.tgz     # en una carpeta aparte
@@ -26,15 +30,63 @@ function* jsonFiles(dir) {
   }
 }
 
+const RESOURCES = {
+  Gold: 'gold',
+  Elixir: 'elixir',
+  'Dark Elixir': 'dark',
+  'Gold or Elixir': 'gold_or_elixir',
+  'Builder Gold': 'builder_gold',
+  'Builder Elixir': 'builder_elixir',
+  'Builder Gold or Builder Elixir': 'builder_gold_or_elixir',
+};
+
+function seconds(time) {
+  return time.days * 86400 + time.hours * 3600 + time.minutes * 60 + time.seconds;
+}
+
+const skipped = [];
+
+// El paquete usa build*, upgrade* o research* según el tipo de elemento.
+function levelsOf(node) {
+  if (!Array.isArray(node.levels)) return [];
+  // Se usa solo el primer tramo consecutivo desde el nivel 1 (el índice es el nivel). Algunos
+  // elementos traen después otro tramo que vuelve a empezar en 1 con costos y requisitos
+  // distintos: es otra variante del elemento, no sus niveles siguientes, y se descarta.
+  let length = 0;
+  while (length < node.levels.length && node.levels[length].level === length + 1) length++;
+  if (length === 0) {
+    skipped.push(`${node.name} (${node.dataId}): los niveles no empiezan en 1`);
+    return [];
+  }
+  if (length < node.levels.length) {
+    skipped.push(`${node.name} (${node.dataId}): se descartan ${node.levels.length - length} niveles de otra variante`);
+  }
+  const out = [];
+  for (const level of node.levels.slice(0, length)) {
+    const kind = ['build', 'upgrade', 'research'].find((k) => typeof level[`${k}Cost`] === 'number');
+    if (!kind) return []; // si algún nivel no trae costo, no se guarda ninguno
+    const name = level[`${kind}CostResource`];
+    if (name === undefined) {
+      skipped.push(`${node.name} (${node.dataId}): costo sin tipo de recurso`);
+      return [];
+    }
+    const resource = RESOURCES[name];
+    if (!resource) throw new Error(`dataId ${node.dataId}: recurso desconocido "${name}"`);
+    out.push([level[`${kind}Cost`], resource, seconds(level[`${kind}Time`])]);
+  }
+  return out;
+}
+
 const items = new Map();
 function collect(node, file) {
   if (Array.isArray(node)) return node.forEach((child) => collect(child, file));
   if (node === null || typeof node !== 'object') return;
-  if (Number.isInteger(node.dataId) && typeof node.name === 'string') {
-    const entry = [node.name, String(node.category ?? ''), String(node.base ?? '')];
+  // Los módulos de las defensas ensambladas ("Hitpoints", "Damage"…) no tienen categoría ni son mejoras.
+  if (Number.isInteger(node.dataId) && typeof node.name === 'string' && node.category) {
+    const entry = [node.name, String(node.category), String(node.base ?? ''), levelsOf(node)];
     const previous = items.get(node.dataId);
-    if (previous && previous[0] !== entry[0]) {
-      throw new Error(`dataId ${node.dataId} repetido con nombres distintos: "${previous[0]}" y "${entry[0]}" (${file})`);
+    if (previous && JSON.stringify(previous) !== JSON.stringify(entry)) {
+      throw new Error(`dataId ${node.dataId} repetido con datos distintos: "${previous[0]}" y "${entry[0]}" (${file})`);
     }
     items.set(node.dataId, entry);
   }
@@ -53,3 +105,4 @@ const output = `{\n  "source": ${JSON.stringify(source)},\n  "items": {\n${lines
 const out = join(dirname(fileURLToPath(import.meta.url)), '..', 'src', 'catalog', 'catalog.json');
 writeFileSync(out, output);
 console.log(`${ids.length} elementos de ${source} -> ${out}`);
+for (const line of skipped) console.warn(`  ${line}`);

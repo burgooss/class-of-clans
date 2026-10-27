@@ -1,7 +1,7 @@
 import { BACKUP_VERSION, parseBackup, TABLE_NAMES, TABLES } from '@/backup/format';
 import { parseExport } from '@/export';
 
-import { deleteAccount, renameAccount } from '../accounts';
+import { deleteAccount, renameAccount, setResources } from '../accounts';
 import { createBackup, restoreBackup } from '../backup';
 import { importExport } from '../imports';
 import { addLink } from '../links';
@@ -47,7 +47,8 @@ async function populated() {
   await db.runAsync('UPDATE accounts SET notifications_on = 0 WHERE id = ?', ids[2]);
   await db.runAsync('UPDATE active_upgrades SET notification_id = ?', 'notif-local');
 
-  await addSuggestion(db, ids[0], { description: 'Torre', targetLevel: '10', notes: 'nota\ncon salto' }, T0);
+  await setResources(db, ids[0], { gold: 1_500_000, elixir: null, dark: 85_000 }, T0 + 77);
+  await addSuggestion(db, ids[0], { description: 'Torre', targetLevel: '10', notes: 'nota\ncon salto', gameId: 1000027 }, T0);
   const s2 = await addSuggestion(db, ids[0], { description: 'Muro' }, T0);
   await setSuggestionStatus(db, s2, 'done');
   await addLink(db, 'layouts', { name: 'Base guerra', url: 'https://x.com/a?b=1&c=2', townHall: '14', category: 'trophy', accountId: ids[0] }, T0);
@@ -77,6 +78,16 @@ describe('createBackup', () => {
     expect(backup.tables.accounts).toHaveLength(2);
     expect(backup.tables.suggestions).toHaveLength(2);
     expect(backup.tables.active_upgrades.every((u) => !('notification_id' in u))).toBe(true);
+  });
+
+  it('incluye los recursos de las cuentas y el elemento de las sugerencias', async () => {
+    const { db, ids } = await populated();
+    const backup = await createBackup(db, T0);
+    const account = backup.tables.accounts.find((a) => a.id === ids[0])!;
+    expect(account).toMatchObject({ gold: 1_500_000, elixir: null, dark_elixir: 85_000, resources_updated_at: T0 + 77 });
+    const gameIds = backup.tables.suggestions.map((s) => s.game_id);
+    expect(gameIds).toHaveLength(2);
+    expect(gameIds).toEqual(expect.arrayContaining([null, 1000027]));
   });
 
   it('el respaldo de una base poblada pasa la validación', async () => {

@@ -76,8 +76,21 @@ Notas:
 - [x] Reprogramar las notificaciones tras restaurar.
 - [ ] Probar en el teléfono: exportar, desinstalar o borrar datos de la app, e importar. Comprobar también que el selector de archivos encuentra el respaldo (se acepta cualquier tipo de archivo).
 
+## Fase 9 — Pedidos tras probar en el teléfono (2026-10-27)
+
+Probado ya en un teléfono real con Expo Go 58.0.5: las Fases 0 a 8 abren y funcionan; las notificaciones llegan al terminar una mejora.
+
+- [x] Tema oscuro con fondo negro mate (`src/theme.ts`).
+- [x] Nombres de las mejoras desde un catálogo (`src/catalog`), en español cuando se conoce el nombre.
+- [x] Mostrar todo lo que se mejora: constructores, laboratorio, casa de mascotas y otras (panel de cuenta), y laboratorio/mascotas también en la vista general.
+- [x] Avisos para laboratorio y casa de mascotas, además de constructores.
+- [x] Nivel mostrado corregido: `lvl` del export es el nivel actual, la mejora sube a `lvl + 1` (migración 2).
+- [x] Recursos escritos por el usuario y costo de las sugerencias con elemento del catálogo (migración 3, esquema de respaldo 3).
+- [ ] Probar en el teléfono: nombres, secciones de laboratorio y mascotas, recursos y costos.
+- [ ] Revisar los nombres en español de `src/catalog/names.es.ts` contra el juego y completar los que falten (los que no están salen en inglés).
+
 ## Después de v1
 
-- Avisos de notificación y vista general para laboratorio y mascotas; herrero.
-- Nombres en español (hoy salen en inglés del catálogo).
+- Avisos para el herrero y la base del constructor; costos de la base del constructor.
+- Leer los recursos automáticamente (hoy imposible: ni el export ni la API oficial los traen).
 - Widget de pantalla de inicio.

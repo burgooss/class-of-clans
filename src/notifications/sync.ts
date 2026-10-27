@@ -22,6 +22,7 @@ export interface Notifier {
 
 type UpgradeRow = {
   id: number;
+  slot_type: string;
   game_id: number;
   name: string | null;
   target_level: number | null;
@@ -40,17 +41,24 @@ export type SyncResult = {
   permissionDenied: boolean;
 };
 
+// Tipos de espacio que avisan al terminar, y cómo se llama el espacio que queda libre.
+const FREE_LABEL: Record<string, string> = {
+  builder: 'constructor libre',
+  lab: 'laboratorio libre',
+  pet_house: 'casa de mascotas libre',
+};
+
 function messageFor(row: UpgradeRow): { title: string; body: string } {
   return {
-    title: `${row.alias}: constructor libre`,
+    title: `${row.alias}: ${FREE_LABEL[row.slot_type]}`,
     body: `Terminó: ${upgradeName(row.game_id, row.name)}${levelSuffix(row.target_level)}`,
   };
 }
 
 /**
  * Deja las notificaciones programadas iguales a las que corresponden según la base de
- * datos (F4): una por cada mejora de constructor en curso de las cuentas con avisos
- * activados. Es idempotente, así que se puede llamar después de cualquier cambio
+ * datos (F4): una por cada mejora en curso de constructores, laboratorio y casa de mascotas
+ * de las cuentas con avisos activados. Es idempotente, así que se puede llamar después de cualquier cambio
  * (importar, renombrar, borrar, activar/desactivar) y al abrir la app.
  *
  * - Cancela las que ya no corresponden (cuenta borrada, avisos apagados, export
@@ -62,17 +70,21 @@ function messageFor(row: UpgradeRow): { title: string; body: string } {
  */
 export async function syncNotifications(db: SQLiteDatabase, notifier: Notifier, now: number): Promise<SyncResult> {
   const rows = await db.getAllAsync<UpgradeRow>(
-    `SELECT u.id, u.game_id, u.name, u.target_level, u.ends_at, u.notification_id,
+    `SELECT u.id, u.slot_type, u.game_id, u.name, u.target_level, u.ends_at, u.notification_id,
             a.alias, a.notifications_on
        FROM active_upgrades u JOIN accounts a ON a.id = u.account_id
-      WHERE u.slot_type = 'builder'
+      WHERE u.slot_type IN ('builder', 'lab', 'pet_house')
       ORDER BY u.ends_at`,
   );
   const scheduled = await notifier.listScheduled();
   const scheduledById = new Map(scheduled.map((s) => [s.identifier, s]));
 
+  // Las mejoras de constructor cuentan solo si ocupan un constructor (ver HUT_UPGRADE_OCCUPIES_BUILDER).
   const wanted = rows.filter(
-    (r) => r.notifications_on === 1 && r.ends_at > now && occupiesBuilder({ gameId: r.game_id, endsAt: r.ends_at }),
+    (r) =>
+      r.notifications_on === 1 &&
+      r.ends_at > now &&
+      (r.slot_type !== 'builder' || occupiesBuilder({ gameId: r.game_id, endsAt: r.ends_at })),
   );
 
   const keptIds = new Set<string>();

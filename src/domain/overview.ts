@@ -7,6 +7,13 @@ export type OverviewAccount = {
   builderCount: number | null;
 };
 
+/** Mejora en curso de cualquier tipo de espacio. */
+export type OverviewUpgrade = TimedUpgrade & { slot: string };
+
+/** Espacios, además de los constructores, cuyo próximo fin se muestra en la vista general. */
+export const EXTRA_SLOTS = ['lab', 'pet_house'] as const;
+export type ExtraSlot = (typeof EXTRA_SLOTS)[number];
+
 export type OverviewRow = {
   accountId: number;
   alias: string;
@@ -15,6 +22,8 @@ export type OverviewRow = {
   freeNow: number | null;
   /** Próxima hora en que termina una mejora, o null si no hay ninguna en curso. */
   nextFreeAt: number | null;
+  /** Cuándo termina la mejora más próxima de cada espacio extra que tiene algo en curso. */
+  extras: { slot: ExtraSlot; endsAt: number }[];
 };
 
 // Grupo 0: con constructores libres ahora. Grupo 1: el resto, por la próxima liberación.
@@ -27,17 +36,23 @@ function group(row: OverviewRow): 0 | 1 | 2 {
 /** Filas de la vista general, con el constructor que queda libre primero arriba. */
 export function buildOverview(
   accounts: OverviewAccount[],
-  upgradesByAccount: Map<number, TimedUpgrade[]>,
+  upgradesByAccount: Map<number, OverviewUpgrade[]>,
   now: number,
 ): OverviewRow[] {
   const rows = accounts.map<OverviewRow>((account) => {
-    const upgrades = upgradesByAccount.get(account.id) ?? [];
+    const all = upgradesByAccount.get(account.id) ?? [];
+    const builders = all.filter((u) => u.slot === 'builder');
+    const extras = EXTRA_SLOTS.flatMap((slot) => {
+      const next = nextFreeAt(all.filter((u) => u.slot === slot), now);
+      return next === null ? [] : [{ slot, endsAt: next }];
+    });
     return {
       accountId: account.id,
       alias: account.alias,
       tag: account.tag,
-      freeNow: freeBuilderCount(account.builderCount, upgrades, now),
-      nextFreeAt: nextFreeAt(upgrades, now),
+      freeNow: freeBuilderCount(account.builderCount, builders, now),
+      nextFreeAt: nextFreeAt(builders, now),
+      extras,
     };
   });
 

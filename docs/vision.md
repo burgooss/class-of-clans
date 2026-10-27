@@ -12,9 +12,10 @@ Yo. Una sola persona, varias cuentas. La app no es pública en v1.
 
 1. Muestra, por cuenta, todo lo que se está mejorando y cuánto le falta: constructores, laboratorio, casa de mascotas y, si aparecen en el export, base del constructor y otras mejoras. Con el nombre real de cada mejora.
 2. Muestra en una vista general cuál constructor queda libre primero entre todas las cuentas.
-3. Avisa con una notificación cuando un constructor queda libre.
+3. Avisa con una notificación cuando termina una mejora de constructor, de laboratorio o de casa de mascotas.
 4. Guarda una lista ordenada de siguientes mejoras por cuenta.
 5. Guarda links de bases y de ejércitos para usarlos después, abriéndolos directo en el juego.
+6. Con los recursos que escribo, dice si me alcanza para la siguiente mejora de mi cola de sugerencias (el juego no los incluye en el export).
 
 ## Alcance de v1
 
@@ -26,7 +27,8 @@ Yo. Una sola persona, varias cuentas. La app no es pública en v1.
 
 ## Fuera de v1 (pero el parser debe guardar los datos)
 
-- Avisos de notificación para el laboratorio y la casa de mascotas (hoy solo avisan los constructores) y mostrarlos en la vista general.
+- Avisos para el herrero y la base del constructor.
+- Leer los recursos automáticamente: el export no los trae y la API oficial tampoco; por ahora se escriben a mano.
 - Calcular niveles faltantes o "qué me falta para maxear" contra un catálogo del juego.
 - Widget de pantalla de inicio.
 - Sincronizar entre dispositivos.

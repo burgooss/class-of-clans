@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
+import { type CatalogItem, catalogLevels, catalogName } from '@/catalog';
+import { ItemPickerModal } from '@/components/ItemPickerModal';
 import { Text } from '@/components/Text';
 import { TextInput } from '@/components/TextInput';
 import type { Suggestion, SuggestionInput } from '@/db/suggestions';
@@ -11,6 +13,8 @@ type Props = {
   visible: boolean;
   /** Sugerencia a editar; null para crear una nueva. */
   suggestion: Suggestion | null;
+  /** Nivel actual de cada elemento en el último export de la cuenta (por ID). */
+  currentLevels: Map<number, number>;
   busy?: boolean;
   onSave: (input: SuggestionInput) => void;
   onDelete: () => void;
@@ -20,11 +24,13 @@ type Props = {
 const STATUSES: SuggestionStatus[] = ['pending', 'in_progress', 'done'];
 
 /** Formulario para crear o editar una sugerencia de mejora (F5). */
-export function SuggestionModal({ visible, suggestion, busy = false, onSave, onDelete, onCancel }: Props) {
+export function SuggestionModal({ visible, suggestion, currentLevels, busy = false, onSave, onDelete, onCancel }: Props) {
   const [description, setDescription] = useState('');
   const [targetLevel, setTargetLevel] = useState('');
   const [notes, setNotes] = useState('');
   const [status, setStatus] = useState<SuggestionStatus>('pending');
+  const [gameId, setGameId] = useState<number | null>(null);
+  const [picking, setPicking] = useState(false);
 
   useEffect(() => {
     if (!visible) return;
@@ -32,7 +38,23 @@ export function SuggestionModal({ visible, suggestion, busy = false, onSave, onD
     setTargetLevel(suggestion?.target_level != null ? String(suggestion.target_level) : '');
     setNotes(suggestion?.notes ?? '');
     setStatus(suggestion?.status ?? 'pending');
+    setGameId(suggestion?.game_id ?? null);
+    setPicking(false);
   }, [visible, suggestion]);
+
+  // Al elegir un elemento: pone su nombre si la descripción está vacía y propone el nivel siguiente
+  // al que tiene en el export (o el 1 si no lo tiene), sin pasar del máximo.
+  function pick(item: CatalogItem) {
+    setPicking(false);
+    setGameId(item.id);
+    if (description.trim() === '') setDescription(item.name);
+    const current = currentLevels.get(item.id);
+    const next = current === undefined ? 1 : current + 1;
+    setTargetLevel(next <= item.maxLevel ? String(next) : '');
+  }
+
+  const itemLevels = gameId === null ? [] : catalogLevels(gameId);
+  const itemCurrent = gameId === null ? undefined : currentLevels.get(gameId);
 
   const disabled = busy || description.trim() === '';
   const editing = suggestion !== null;
@@ -53,6 +75,28 @@ export function SuggestionModal({ visible, suggestion, busy = false, onSave, onD
               autoFocus={!editing}
               maxLength={120}
             />
+
+            <Text style={styles.label}>Elemento del juego (opcional, para calcular el costo)</Text>
+            {gameId === null ? (
+              <Pressable style={styles.pick} onPress={() => setPicking(true)} disabled={busy}>
+                <Text style={styles.pickText}>Elegir del catálogo</Text>
+              </Pressable>
+            ) : (
+              <View style={styles.picked}>
+                <View style={styles.pickedText}>
+                  <Text style={styles.pickedName}>{catalogName(gameId)}</Text>
+                  <Text style={styles.pickedMeta}>
+                    {itemCurrent === undefined ? 'No está en tu export' : `Nivel actual ${itemCurrent}`} · máximo {itemLevels.length}
+                  </Text>
+                </View>
+                <Pressable onPress={() => setPicking(true)} disabled={busy}>
+                  <Text style={styles.link}>Cambiar</Text>
+                </Pressable>
+                <Pressable onPress={() => setGameId(null)} disabled={busy}>
+                  <Text style={styles.linkDanger}>Quitar</Text>
+                </Pressable>
+              </View>
+            )}
 
             <Text style={styles.label}>Nivel objetivo (opcional)</Text>
             <TextInput
@@ -104,7 +148,7 @@ export function SuggestionModal({ visible, suggestion, busy = false, onSave, onD
                   <Text style={styles.cancel}>Cancelar</Text>
                 </Pressable>
                 <Pressable
-                  onPress={() => onSave({ description, targetLevel, notes, status: editing ? status : undefined })}
+                  onPress={() => onSave({ description, targetLevel, notes, status: editing ? status : undefined, gameId })}
                   disabled={disabled}
                 >
                   <Text style={[styles.confirm, disabled && styles.disabled]}>Guardar</Text>
@@ -114,6 +158,7 @@ export function SuggestionModal({ visible, suggestion, busy = false, onSave, onD
           </View>
         </ScrollView>
       </View>
+      <ItemPickerModal visible={picking} onPick={pick} onCancel={() => setPicking(false)} />
     </Modal>
   );
 }
@@ -126,6 +171,14 @@ const styles = StyleSheet.create({
   label: { fontSize: 13, opacity: 0.7, marginTop: 4 },
   input: { borderWidth: 1, borderColor: colors.inputBorder, borderRadius: 8, padding: 10, fontSize: 16 },
   notes: { minHeight: 80 },
+  pick: { borderWidth: 1, borderColor: colors.accent, borderRadius: 8, padding: 10, alignItems: 'center' },
+  pickText: { color: colors.accent, fontSize: 15, fontWeight: '600' },
+  picked: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.surface, borderRadius: 8, padding: 10 },
+  pickedText: { flex: 1 },
+  pickedName: { fontSize: 15, fontWeight: '600' },
+  pickedMeta: { fontSize: 12, opacity: 0.7 },
+  link: { fontSize: 14, color: colors.accent },
+  linkDanger: { fontSize: 14, color: colors.danger },
   statusRow: { flexDirection: 'row', gap: 8 },
   statusChip: { paddingVertical: 8, paddingHorizontal: 12, borderRadius: 20, backgroundColor: colors.chip },
   statusChipOn: { backgroundColor: colors.accentStrong },

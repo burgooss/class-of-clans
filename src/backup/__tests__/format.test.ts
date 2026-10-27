@@ -1,6 +1,7 @@
 import { type Backup, BACKUP_FORMAT, BACKUP_VERSION, BackupError, parseBackup, summarize } from '../format';
 
 const SCHEMA = 1;
+const NO_RESOURCES = { gold: null, elixir: null, dark_elixir: null, resources_updated_at: null };
 
 function sample(): Backup {
   return {
@@ -10,15 +11,15 @@ function sample(): Backup {
     exportedAt: 1_700_000_000,
     tables: {
       accounts: [
-        { id: 1, tag: '#AAA111', alias: 'Principal', town_hall: 9, builder_count: 3, notifications_on: 1, last_export_id: 10, created_at: 1 },
-        { id: 2, tag: '#BBB222', alias: 'Granja', town_hall: null, builder_count: null, notifications_on: 0, last_export_id: null, created_at: 2 },
+        { id: 1, tag: '#AAA111', alias: 'Principal', town_hall: 9, builder_count: 3, notifications_on: 1, last_export_id: 10, created_at: 1, ...NO_RESOURCES },
+        { id: 2, tag: '#BBB222', alias: 'Granja', town_hall: null, builder_count: null, notifications_on: 0, last_export_id: null, created_at: 2, ...NO_RESOURCES },
       ],
       exports: [{ id: 10, account_id: 1, captured_at: 5, imported_at: 6, raw_json: '{"tag":"#AAA111"}' }],
       active_upgrades: [
         { id: 1, account_id: 1, export_id: 10, slot_type: 'builder', game_id: 1000003, name: null, target_level: 6, ends_at: 99 },
       ],
       suggestions: [
-        { id: 1, account_id: 2, description: 'Torre', target_level: null, position: 1, status: 'pending', notes: null, created_at: 3 },
+        { id: 1, account_id: 2, description: 'Torre', target_level: null, position: 1, status: 'pending', notes: null, created_at: 3, game_id: null },
       ],
       layouts: [
         { id: 1, account_id: null, name: 'Base', url: 'https://x.com/a', town_hall: 9, kind: 'war', notes: null, created_at: 4 },
@@ -112,6 +113,31 @@ describe('parseBackup: versiones', () => {
     expect(result.tables.active_upgrades.map((u) => u.target_level)).toEqual([7, null]);
     // Las sugerencias tienen su propio target_level y no se tocan.
     expect(result.tables.suggestions).toEqual(old.tables.suggestions);
+  });
+
+  it('un respaldo del esquema 1 llega hasta el 3: las columnas nuevas quedan en null', () => {
+    const result = parseBackup(text(sample()), { schemaVersion: 3 });
+    expect(result.schemaVersion).toBe(3);
+    expect(result.tables.accounts[0]).toMatchObject({ gold: null, elixir: null, dark_elixir: null, resources_updated_at: null });
+    expect(result.tables.suggestions[0].game_id).toBeNull();
+    expect(result.tables.active_upgrades[0].target_level).toBe(7); // la conversión 1→2 también se aplicó
+  });
+
+  it('un respaldo del esquema 2 no pierde ni cambia datos al pasar al 3', () => {
+    const v2 = mutate((b) => void (b.schemaVersion = 2));
+    const result = parseBackup(text(v2), { schemaVersion: 3 });
+    expect(result.tables.active_upgrades[0].target_level).toBe(6);
+  });
+
+  it('un respaldo del esquema 3 conserva recursos y game_id', () => {
+    const v3 = mutate((b) => {
+      b.schemaVersion = 3;
+      Object.assign(b.tables.accounts[0], { gold: 100, elixir: 200, dark_elixir: 3, resources_updated_at: 55 });
+      b.tables.suggestions[0].game_id = 1000027;
+    });
+    const result = parseBackup(text(v3), { schemaVersion: 3 });
+    expect(result.tables.accounts[0]).toMatchObject({ gold: 100, elixir: 200, dark_elixir: 3, resources_updated_at: 55 });
+    expect(result.tables.suggestions[0].game_id).toBe(1000027);
   });
 
   it('un respaldo ya en el esquema actual no se convierte', () => {

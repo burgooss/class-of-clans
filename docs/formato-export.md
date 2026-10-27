@@ -60,7 +60,7 @@ Los demás nombres salen del catálogo de la pregunta 7.
 ## Puntos pendientes de confirmar
 
 1. ~~Ayuntamiento = `1000001`~~ y ~~número de constructores~~: confirmados.
-2. **B.O.B.** En la cuenta A aparece `1000093` (nivel 1, cantidad 1), cuyo significado se desconoce. Falta saber si esa cuenta tiene B.O.B y si es ese edificio.
+2. ~~**B.O.B.**~~ Resuelto con el catálogo: `1000093` es la **Casa de ayudantes** (Helper Hut), donde viven los ayudantes (`helpers`: Aprendiz de constructor, Asistente de laboratorio, Prospector). La cabaña de B.O.B es `1000064` y no aparece en ningún ejemplo, así que ninguna de esas cuentas la tiene.
 3. **¿Mejorar una cabaña ocupa un constructor?** En la cuenta A hay 3 cabañas con `timer`. Si ocupan constructor, los 5 estaban ocupados (3 cabañas + 2 héroes); si no, solo 2 estaban ocupados. Cambia el cálculo de "constructores libres".
 4. ~~**Significado de `lvl` cuando hay `timer`**~~ **Resuelto (2026-10-27): es el nivel ACTUAL; la mejora sube a `lvl + 1`.** Con los tiempos de construcción del catálogo se comprobó que el `timer` restante nunca puede superar el tiempo total de la mejora. En 6 de las 13 mejoras de los ejemplos el `timer` es mayor que el tiempo del nivel `lvl` (Castillo del clan `lvl` 3: 15,2 h restantes contra 12 h de construcción; almacenes de elixir `lvl` 6: 1,9 h contra 1 h; cabañas `lvl` 3: 73 h contra 72 h), lo que descarta "`lvl` = destino". Las 13 son compatibles con "`lvl` = actual" y ninguna lo contradice. Los héroes, tropas y mascotas no discriminan (sus tiempos de `lvl` y `lvl + 1` coinciden o sobran), así que se asume la misma regla.
 5. **`helpers`** (`helper_cooldown`) y **`gear_up`**: significado. No bloquean v1.

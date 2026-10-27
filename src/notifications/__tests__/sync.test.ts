@@ -65,24 +65,47 @@ async function add(db: Awaited<ReturnType<typeof setup>>, tag: string, alias: st
 const times = (store: Map<string, { at: number }>) => [...store.values()].map((n) => n.at).sort((a, b) => a - b);
 
 describe('syncNotifications', () => {
-  it('programa una notificación por mejora de constructor, no de laboratorio', async () => {
+  it('programa una notificación por cada mejora de constructor y de laboratorio', async () => {
     const db = await setup();
     const { notifier, store } = createFakeNotifier();
     await add(db, '#AAA111', 'Granja TH12');
 
     const result = await syncNotifications(db, notifier, T0);
 
-    expect(result).toEqual({ scheduled: 2, cancelled: 0, failed: 0, permissionDenied: false });
-    expect(times(store)).toEqual([T0 + 600, T0 + 1200]);
+    expect(result).toEqual({ scheduled: 3, cancelled: 0, failed: 0, permissionDenied: false });
+    expect(times(store)).toEqual([T0 + 300, T0 + 600, T0 + 1200]);
     const first = [...store.values()].find((n) => n.at === T0 + 1200)!;
     expect(first.title).toBe('Granja TH12: constructor libre');
-    expect(first.body).toBe('Terminó: Gold Mine → nivel 4');
+    expect(first.body).toBe('Terminó: Mina de oro → nivel 4');
+    const lab = [...store.values()].find((n) => n.at === T0 + 300)!;
+    expect(lab.title).toBe('Granja TH12: laboratorio libre');
+    expect(lab.body).toBe('Terminó: Bárbaro → nivel 3');
     const stored = await db.getAllAsync<{ notification_id: string | null; slot_type: string }>(
       'SELECT notification_id, slot_type FROM active_upgrades ORDER BY ends_at',
     );
     expect(stored.map((r) => r.slot_type)).toEqual(['lab', 'builder', 'builder']);
-    expect(stored[0].notification_id).toBeNull();
-    expect(stored[1].notification_id).not.toBeNull();
+    expect(stored.every((r) => r.notification_id !== null)).toBe(true);
+  });
+
+  it('avisa de la casa de mascotas con su propio texto, y no de otros tipos de mejora', async () => {
+    const db = await setup();
+    const { notifier, store } = createFakeNotifier();
+    await add(db, '#AAA111', 'Principal', {
+      buildings: [{ data: 1000015, lvl: 1, cnt: 1 }],
+      units: [],
+      pets: [{ data: 73000000, lvl: 8, timer: 900 }],
+      spells: [{ data: 26000000, lvl: 3, timer: 500 }],
+      buildings2: [{ data: 1000033, lvl: 2, timer: 400 }],
+    });
+
+    const result = await syncNotifications(db, notifier, T0);
+
+    // Solo la mascota: hechizos (tipo "other") y base del constructor no avisan.
+    expect(result.scheduled).toBe(1);
+    const [pet] = [...store.values()];
+    expect(pet.title).toBe('Principal: casa de mascotas libre');
+    expect(pet.body).toBe('Terminó: L.A.S.S.I → nivel 9');
+    expect(pet.at).toBe(T0 + 900);
   });
 
   it('es idempotente: la segunda vez no hace nada', async () => {
@@ -92,7 +115,7 @@ describe('syncNotifications', () => {
     await syncNotifications(db, notifier, T0);
     const second = await syncNotifications(db, notifier, T0 + 10);
     expect(second).toEqual({ scheduled: 0, cancelled: 0, failed: 0, permissionDenied: false });
-    expect(calls.schedule).toBe(2);
+    expect(calls.schedule).toBe(3);
     expect(calls.cancel).toBe(0);
   });
 
@@ -112,12 +135,13 @@ describe('syncNotifications', () => {
           { data: 1000015, lvl: 1, cnt: 3 },
           { data: 1000005, lvl: 2, timer: 5000 },
         ],
+        units: [],
       },
       T0 + 105,
     );
     const result = await syncNotifications(db, notifier, T0 + 105);
 
-    expect(result).toMatchObject({ scheduled: 1, cancelled: 2 });
+    expect(result).toMatchObject({ scheduled: 1, cancelled: 3 });
     expect(times(store)).toEqual([T0 + 100 + 5000]);
   });
 
@@ -128,14 +152,14 @@ describe('syncNotifications', () => {
     await syncNotifications(db, notifier, T0);
 
     await setNotificationsEnabled(db, accountId, false);
-    expect(await syncNotifications(db, notifier, T0)).toMatchObject({ scheduled: 0, cancelled: 2 });
+    expect(await syncNotifications(db, notifier, T0)).toMatchObject({ scheduled: 0, cancelled: 3 });
     expect(store.size).toBe(0);
     const ids = await db.getAllAsync<{ notification_id: string | null }>('SELECT notification_id FROM active_upgrades');
     expect(ids.every((r) => r.notification_id === null)).toBe(true);
 
     await setNotificationsEnabled(db, accountId, true);
-    expect(await syncNotifications(db, notifier, T0)).toMatchObject({ scheduled: 2, cancelled: 0 });
-    expect(store.size).toBe(2);
+    expect(await syncNotifications(db, notifier, T0)).toMatchObject({ scheduled: 3, cancelled: 0 });
+    expect(store.size).toBe(3);
   });
 
   it('el interruptor de una cuenta no afecta a las otras', async () => {
@@ -147,8 +171,8 @@ describe('syncNotifications', () => {
 
     await syncNotifications(db, notifier, T0);
 
-    expect(store.size).toBe(2);
-    expect([...store.values()].every((n) => n.title === 'Otra: constructor libre')).toBe(true);
+    expect(store.size).toBe(3);
+    expect([...store.values()].every((n) => n.title?.startsWith('Otra: '))).toBe(true);
   });
 
   it('al renombrar reprograma con el alias nuevo', async () => {
@@ -160,8 +184,8 @@ describe('syncNotifications', () => {
     await renameAccount(db, accountId, 'Nuevo');
     const result = await syncNotifications(db, notifier, T0);
 
-    expect(result).toMatchObject({ scheduled: 2, cancelled: 2 });
-    expect([...store.values()].every((n) => n.title === 'Nuevo: constructor libre')).toBe(true);
+    expect(result).toMatchObject({ scheduled: 3, cancelled: 3 });
+    expect([...store.values()].every((n) => n.title?.startsWith('Nuevo: '))).toBe(true);
   });
 
   it('al borrar la cuenta cancela sus notificaciones y deja las demás', async () => {
@@ -170,13 +194,14 @@ describe('syncNotifications', () => {
     const a = await add(db, '#AAA111', 'Una');
     await add(db, '#BBB222', 'Otra');
     await syncNotifications(db, notifier, T0);
-    expect(store.size).toBe(4);
+    expect(store.size).toBe(6);
 
     await deleteAccount(db, a.accountId);
     const result = await syncNotifications(db, notifier, T0);
 
-    expect(result).toMatchObject({ scheduled: 0, cancelled: 2 });
-    expect([...store.values()].every((n) => n.title === 'Otra: constructor libre')).toBe(true);
+    expect(result).toMatchObject({ scheduled: 0, cancelled: 3 });
+    expect(store.size).toBe(3);
+    expect([...store.values()].every((n) => n.title?.startsWith('Otra: '))).toBe(true);
   });
 
   it('no avisa de mejoras que ya terminaron', async () => {
@@ -217,7 +242,7 @@ describe('syncNotifications', () => {
     const db = await setup();
     const { notifier, calls } = createFakeNotifier({ permission: false });
     await syncNotifications(db, notifier, T0);
-    await add(db, '#AAA111', 'Principal', { buildings: [{ data: 1000015, lvl: 1, cnt: 3 }] });
+    await add(db, '#AAA111', 'Principal', { buildings: [{ data: 1000015, lvl: 1, cnt: 3 }], units: [] });
     await syncNotifications(db, notifier, T0);
     expect(calls.ensurePermission).toBe(0);
   });
@@ -228,13 +253,13 @@ describe('syncNotifications', () => {
     await add(db, '#AAA111', 'Principal');
 
     const first = await syncNotifications(db, flaky.notifier, T0);
-    expect(first).toMatchObject({ scheduled: 1, failed: 1 });
+    expect(first).toMatchObject({ scheduled: 2, failed: 1 });
 
     const healthy = createFakeNotifier();
     // El segundo notificador no conoce la primera notificación: se reprograma lo que falte.
     const second = await syncNotifications(db, healthy.notifier, T0);
     expect(second.permissionDenied).toBe(false);
-    expect(healthy.store.size).toBe(2);
+    expect(healthy.store.size).toBe(3);
   });
 });
 

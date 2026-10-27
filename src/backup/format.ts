@@ -26,6 +26,10 @@ export const TABLES = {
     { name: 'notifications_on', type: 'int', oneOf: ['0', '1'] },
     { name: 'last_export_id', type: 'int', nullable: true },
     { name: 'created_at', type: 'int' },
+    { name: 'gold', type: 'int', nullable: true },
+    { name: 'elixir', type: 'int', nullable: true },
+    { name: 'dark_elixir', type: 'int', nullable: true },
+    { name: 'resources_updated_at', type: 'int', nullable: true },
   ],
   exports: [
     { name: 'id', type: 'int' },
@@ -53,6 +57,7 @@ export const TABLES = {
     { name: 'status', type: 'text', oneOf: ['pending', 'in_progress', 'done'] },
     { name: 'notes', type: 'text', nullable: true },
     { name: 'created_at', type: 'int' },
+    { name: 'game_id', type: 'int', nullable: true },
   ],
   layouts: [
     { name: 'id', type: 'int' },
@@ -113,6 +118,9 @@ const CONVERSIONS: Record<number, (tables: Record<TableName, Row[]>) => void> = 
       if (typeof upgrade.target_level === 'number') upgrade.target_level += 1;
     }
   },
+  // Esquema 3: columnas nuevas y opcionales (recursos de las cuentas, game_id de las sugerencias).
+  // Un respaldo anterior no las trae y se leen como null: no hay nada que convertir.
+  2: () => {},
 };
 
 function isObject(value: unknown): value is Record<string, unknown> {
