@@ -42,7 +42,7 @@ Mejoras en curso, generadas por el parser a partir del último export de cada cu
 | id | INTEGER PK | |
 | account_id | INTEGER FK → accounts.id | |
 | export_id | INTEGER FK → exports.id | |
-| slot_type | TEXT | `builder`, `lab`, `pet_house`, `builder_base`, `other`. Lo decide el parser por la lista del export donde aparece el `timer` (ver `docs/formato-export.md`). |
+| slot_type | TEXT | `builder`, `lab`, `pet_house`, `builder_base`, `other`. Lo decide el parser por la lista del export donde aparece el `timer` (ver `docs/formato-export.md`): `buildings`, `traps` y `heroes` → `builder`. |
 | game_id | INTEGER | ID del juego |
 | name | TEXT | Nombre guardado, si lo hay; normalmente null: el nombre sale del catálogo (`src/catalog`) según `game_id` |
 | target_level | INTEGER | Nivel al que sube la mejora: `lvl` del export + 1 (el parser lo expone como `targetLevel`, y como `currentLevel` el `lvl` original). |
@@ -117,7 +117,7 @@ Un archivo JSON con todos los datos, que se comparte desde Ajustes → Exportar 
 {
   "format": "clash-builders-backup",
   "version": 1,
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "exportedAt": 1700000000,
   "tables": { "accounts": [], "exports": [], "active_upgrades": [], "suggestions": [], "layouts": [], "armies": [] }
 }

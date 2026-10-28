@@ -121,6 +121,15 @@ const CONVERSIONS: Record<number, (tables: Record<TableName, Row[]>) => void> = 
   // Esquema 3: columnas nuevas y opcionales (recursos de las cuentas, game_id de las sugerencias).
   // Un respaldo anterior no las trae y se leen como null: no hay nada que convertir.
   2: () => {},
+  // Esquema 4: las mejoras de trampas (IDs 12000000-12999999) pasaron de 'other' a 'builder'.
+  3: (tables) => {
+    for (const upgrade of tables.active_upgrades) {
+      const id = upgrade.game_id;
+      if (upgrade.slot_type === 'other' && typeof id === 'number' && id >= 12_000_000 && id < 13_000_000) {
+        upgrade.slot_type = 'builder';
+      }
+    }
+  },
 };
 
 function isObject(value: unknown): value is Record<string, unknown> {

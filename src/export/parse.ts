@@ -1,11 +1,16 @@
 import { BUILDER_HUT_ID, TOWN_HALL_ID } from './ids';
 import { ExportParseError, type ParsedExport, type ParsedUpgrade, type SlotType } from './types';
 
-// Arreglos del export donde se ha visto un `timer`, y qué tipo de espacio ocupan.
-// Los demás arreglos con timer (no observados todavía) se clasifican como 'other'
-// en lugar de adivinar; los de la base del constructor (sufijo "2") son 'builder_base'.
+// Arreglos del export con `timer` y qué tipo de espacio ocupan. Los arreglos con timer que no
+// están aquí se clasifican como 'other' en lugar de adivinar; los de la base del constructor
+// (sufijo "2") son 'builder_base'.
+// `traps`: mejorar una trampa ocupa un constructor. Lo reportó el usuario (la app mostraba
+// constructores libres mientras mejoraba una bomba y una mina aérea buscadora); todavía no hay un
+// export con una trampa en mejora en samples/ para comprobar el formato, que se asume igual al de
+// los edificios (`{data, lvl, timer}`).
 const SLOT_BY_SOURCE: Record<string, SlotType> = {
   buildings: 'builder',
+  traps: 'builder',
   heroes: 'builder',
   units: 'lab',
   pets: 'pet_house',

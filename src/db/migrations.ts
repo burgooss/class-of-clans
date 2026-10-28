@@ -89,6 +89,13 @@ const MIGRATIONS: string[] = [
   ALTER TABLE accounts ADD COLUMN resources_updated_at INTEGER;
   ALTER TABLE suggestions ADD COLUMN game_id INTEGER;
   `,
+  // 4: las mejoras de trampas se guardaban como 'other' y no contaban como constructor ocupado.
+  // Las trampas de la aldea principal tienen IDs 12000000-12999999 (las de la base del constructor
+  // se guardan como 'builder_base', no como 'other'). Las mejoras nuevas ya se guardan bien.
+  `
+  UPDATE active_upgrades SET slot_type = 'builder'
+   WHERE slot_type = 'other' AND game_id >= 12000000 AND game_id < 13000000;
+  `,
 ];
 
 /** Versión actual del esquema (PRAGMA user_version tras migrar). */

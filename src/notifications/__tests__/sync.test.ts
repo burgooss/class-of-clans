@@ -87,6 +87,24 @@ describe('syncNotifications', () => {
     expect(stored.every((r) => r.notification_id !== null)).toBe(true);
   });
 
+  it('avisa cuando termina la mejora de una trampa, como constructor libre', async () => {
+    const db = await setup();
+    const { notifier, store } = createFakeNotifier();
+    await add(db, '#AAA111', 'Principal', {
+      buildings: [{ data: 1000015, lvl: 1, cnt: 1 }],
+      units: [],
+      traps: [{ data: 12000006, lvl: 4, timer: 700 }],
+    });
+
+    const result = await syncNotifications(db, notifier, T0);
+
+    expect(result.scheduled).toBe(1);
+    const [trap] = [...store.values()];
+    expect(trap.title).toBe('Principal: constructor libre');
+    expect(trap.body).toBe('Terminó: Seeking Air Mine → nivel 5');
+    expect(trap.at).toBe(T0 + 700);
+  });
+
   it('avisa de la casa de mascotas con su propio texto, y no de otros tipos de mejora', async () => {
     const db = await setup();
     const { notifier, store } = createFakeNotifier();

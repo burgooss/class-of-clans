@@ -65,6 +65,23 @@ describe('parseExport (casos sintéticos)', () => {
     expect(by('buildings2')?.slotType).toBe('builder_base');
   });
 
+  it('mejorar una trampa ocupa un constructor: se clasifica como builder', () => {
+    const result = parseExport(
+      minimalExport({
+        traps: [
+          { data: 12000006, lvl: 4, timer: 3600 },
+          { data: 12000000, lvl: 9, cnt: 7 },
+        ],
+        traps2: [{ data: 12000011, lvl: 2, timer: 60 }],
+      }),
+      { now: NOW },
+    );
+    const trap = result.upgrades.find((u) => u.source === 'traps');
+    expect(trap).toMatchObject({ slotType: 'builder', gameId: 12000006, currentLevel: 4, targetLevel: 5, endsAt: 1_700_003_600 });
+    // Las trampas de la base del constructor siguen siendo de esa base.
+    expect(result.upgrades.find((u) => u.source === 'traps2')?.slotType).toBe('builder_base');
+  });
+
   it('el nivel destino es el nivel actual + 1, o null si el export no trae lvl', () => {
     const result = parseExport(
       minimalExport({ buildings: [{ data: 1000003, lvl: 9, timer: 10 }, { data: 1000004, timer: 20 }] }),

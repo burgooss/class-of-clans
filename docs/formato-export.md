@@ -43,7 +43,7 @@ Todas las claves de lista aparecen siempre, aunque vengan vacías (`[]`), except
 | 1 | Nombre de los campos | Ver tablas de arriba. | Confirmado |
 | 2 | ¿Hora del export en el JSON? | Sí: `timestamp` (epoch, segundos). Los 3 exports, tomados uno tras otro, difieren 66 s y 41 s entre sí. | Confirmado |
 | 3 | ¿`timer` es restante o fin? | **Segundos restantes.** Dos mejoras idénticas (mismo ID y nivel) tienen timers que difieren en 6 s, algo imposible si fueran duración total, y los valores son muy pequeños para ser epoch. Fin de la mejora = `timestamp + timer`. | Probable (comprobar re-exportando una cuenta y viendo que el timer baja) |
-| 4 | ¿Cómo se distingue edificio / héroe / laboratorio? | **Por la clave del arreglo donde aparece el `timer`.** Observado: `buildings` y `heroes` (constructor), `units` (laboratorio), `pets` (casa de mascotas). No se vio ningún timer en `spells`, `siege_machines`, `equipment` ni en las claves con sufijo `2`. | Confirmado para lo observado |
+| 4 | ¿Cómo se distingue edificio / héroe / laboratorio? | **Por la clave del arreglo donde aparece el `timer`.** Observado en los ejemplos: `buildings` y `heroes` (constructor), `units` (laboratorio), `pets` (casa de mascotas). **`traps` (constructor)**: lo reportó el usuario el 2026-10-28 (la app mostraba constructores libres mientras mejoraba una bomba y una mina aérea buscadora); ninguno de los 3 ejemplos tenía una trampa en mejora, así que se asume el mismo formato que los edificios y falta un export real que lo confirme. No se vio ningún timer en `spells`, `siege_machines`, `equipment` ni en las claves con sufijo `2`. | Confirmado para lo observado; `traps` pendiente de confirmar con un export |
 | 5 | ¿Cuántos constructores? | No hay campo. Se cuenta con las **cabañas de constructor**: elementos de `buildings` con `data = 1000015`, sumando `cnt` (o 1 si no trae). Resultado: A=5, B=3, C=2. | Confirmado por el usuario (2026-10-20) |
 | 6 | ¿Qué cambia con impulso activo? | Sin datos: `boosts` vino vacío siempre. | Pendiente (falta `con-impulso.json`) |
 | 7 | ¿Cómo se traducen los IDs a nombres? | Con el catálogo `src/catalog/catalog.json`, generado por `scripts/build-catalog.mjs` a partir del paquete comunitario `clash-of-clans-data` (MIT), cuyo `dataId` es el mismo número que el export. Cubre los 332 elementos de los 3 ejemplos y los IDs vistos en el teléfono. Nombres en inglés. La licencia está en `src/catalog/LICENSE-clash-of-clans-data.txt`. | Confirmado |
@@ -68,6 +68,8 @@ Los demás nombres salen del catálogo de la pregunta 7.
 7. **Constructor libre:** exportar una cuenta con algún constructor sin mejora y confirmar que simplemente no hay `timer` para él (los 3 ejemplos tenían todos los constructores ocupados, si el punto 3 resulta afirmativo).
 
 Mientras tanto la app usa una suposición provisional, en una constante de `src/domain/builders.ts`: la del punto 3 (`HUT_UPGRADE_OCCUPIES_BUILDER = true`).
+
+8. **Mejoras que ocupan constructor y no están en `buildings`, `heroes` ni `traps`.** En el juego, quitar un obstáculo (`obstacles`) también ocupa un constructor. Nunca se ha visto un `timer` en `obstacles`; si aparece uno, hoy se guardaría como "otras mejoras" y no contaría como constructor ocupado, igual que pasaba con las trampas. Comprobarlo la próxima vez que se quite un obstáculo.
 
 ## Ejemplos para pruebas
 

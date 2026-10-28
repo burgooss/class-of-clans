@@ -1,6 +1,8 @@
 import { parseExport } from '@/export';
 
 import { ImportError, importExport, MAX_EXPORTS_PER_ACCOUNT } from '../imports';
+import { freeBuilderCount } from '@/domain/builders';
+
 import { migrateDb, SCHEMA_VERSION } from '../migrations';
 import { getAccountByTag, getAllBuilderUpgrades, getBuilderUpgrades, getLastCapturedAt } from '../queries';
 import { createTestDb } from '../testing/nodeSqlite';
@@ -88,6 +90,43 @@ describe('migraciones sobre una base con datos', () => {
     expect(await levels(db)).toEqual([7, null]);
   });
 
+  it('la migración 4 pasa las trampas guardadas como "other" a constructor, y solo ellas', async () => {
+    const db = await oldDb(3);
+    const insert = (slot: string, gameId: number) =>
+      db.runAsync(
+        'INSERT INTO active_upgrades (account_id, export_id, slot_type, game_id, target_level, ends_at) VALUES (1, 1, ?, ?, 5, 99)',
+        slot,
+        gameId,
+      );
+    await insert('other', 12000006); // mina aérea buscadora (trampa de la aldea principal)
+    await insert('other', 12000000); // bomba
+    await insert('other', 26000000); // hechizo de rayo: no es trampa
+    await insert('builder_base', 12000011); // trampa de la base del constructor: no cambia
+    await insert('other', 13000000); // fuera del rango de trampas
+
+    await migrateDb(db);
+
+    const rows = await db.getAllAsync<{ game_id: number; slot_type: string }>(
+      'SELECT game_id, slot_type FROM active_upgrades WHERE game_id <> 1000003 ORDER BY id',
+    );
+    expect(rows.map((r) => [r.game_id, r.slot_type])).toEqual([
+      [12000006, 'builder'],
+      [12000000, 'builder'],
+      [26000000, 'other'],
+      [12000011, 'builder_base'],
+      [13000000, 'other'],
+    ]);
+  });
+
+  it('migrar de nuevo no cambia nada más', async () => {
+    const db = await oldDb(3);
+    await db.runAsync("INSERT INTO active_upgrades (account_id, export_id, slot_type, game_id, target_level, ends_at) VALUES (1, 1, 'other', 12000006, 5, 99)");
+    await migrateDb(db);
+    const first = await db.getAllAsync('SELECT * FROM active_upgrades ORDER BY id');
+    await migrateDb(db);
+    expect(await db.getAllAsync('SELECT * FROM active_upgrades ORDER BY id')).toEqual(first);
+  });
+
   it('la migración 3 agrega recursos y game_id vacíos sin tocar lo que ya había', async () => {
     const db = await oldDb(2);
     await migrateDb(db);
@@ -97,6 +136,31 @@ describe('migraciones sobre una base con datos', () => {
     const suggestion = await db.getFirstAsync<Record<string, unknown>>('SELECT description, game_id FROM suggestions');
     expect(suggestion).toEqual({ description: 'Torre', game_id: null });
     expect(await levels(db)).toEqual([6, null]); // la migración 3 no toca los niveles
+  });
+});
+
+describe('importExport: mejora de trampa', () => {
+  it('cuenta como constructor ocupado, igual que un edificio', async () => {
+    const db = await setup();
+    // 3 cabañas = 3 constructores; una mejora de edificio y una de trampa: queda 1 libre.
+    const text = makeExport({
+      buildings: [
+        { data: 1000001, lvl: 9, cnt: 1 },
+        { data: 1000015, lvl: 1, cnt: 3 },
+        { data: 1000003, lvl: 6, timer: 600 },
+      ],
+      units: [],
+      traps: [{ data: 12000006, lvl: 4, timer: 900 }],
+    });
+    const { accountId } = await importExport(db, parseExport(text), text, { alias: 'Principal', now: T0 });
+
+    const builder = await getBuilderUpgrades(db, accountId);
+    expect(builder.map((u) => [u.game_id, u.target_level])).toEqual([
+      [1000003, 7],
+      [12000006, 5],
+    ]);
+    const account = await getAccountByTag(db, '#ABC123');
+    expect(freeBuilderCount(account!.builder_count, builder.map((u) => ({ gameId: u.game_id, endsAt: u.ends_at })), T0 + 5)).toBe(1);
   });
 });
 

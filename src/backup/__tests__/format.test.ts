@@ -140,6 +140,37 @@ describe('parseBackup: versiones', () => {
     expect(result.tables.suggestions[0].game_id).toBe(1000027);
   });
 
+  it('un respaldo del esquema 3 pasa a constructor las trampas guardadas como "other", y solo ellas', () => {
+    const v3 = mutate((b) => {
+      b.schemaVersion = 3;
+      const base = b.tables.active_upgrades[0];
+      b.tables.active_upgrades.push(
+        { ...base, id: 2, slot_type: 'other', game_id: 12000006 },
+        { ...base, id: 3, slot_type: 'other', game_id: 26000000 },
+        { ...base, id: 4, slot_type: 'builder_base', game_id: 12000011 },
+        { ...base, id: 5, slot_type: 'lab', game_id: 4000000 },
+      );
+    });
+    const result = parseBackup(text(v3), { schemaVersion: 4 });
+    expect(result.schemaVersion).toBe(4);
+    expect(result.tables.active_upgrades.map((u) => [u.game_id, u.slot_type])).toEqual([
+      [1000003, 'builder'],
+      [12000006, 'builder'],
+      [26000000, 'other'],
+      [12000011, 'builder_base'],
+      [4000000, 'lab'],
+    ]);
+  });
+
+  it('un respaldo del esquema 4 no se convierte', () => {
+    const v4 = mutate((b) => {
+      b.schemaVersion = 4;
+      b.tables.active_upgrades[0].slot_type = 'other';
+      b.tables.active_upgrades[0].game_id = 12000006;
+    });
+    expect(parseBackup(text(v4), { schemaVersion: 4 }).tables.active_upgrades[0].slot_type).toBe('other');
+  });
+
   it('un respaldo ya en el esquema actual no se convierte', () => {
     const current = mutate((b) => void (b.schemaVersion = 2));
     expect(parseBackup(text(current), { schemaVersion: 2 }).tables.active_upgrades[0].target_level).toBe(6);

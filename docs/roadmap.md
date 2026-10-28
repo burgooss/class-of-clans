@@ -98,6 +98,13 @@ Probado ya en un teléfono real con Expo Go 58.0.5: las Fases 0 a 8 abren y func
 - [ ] Instalar el APK en el teléfono y comprobar: arranque, pasar los datos desde Expo Go con el respaldo, avisos de notificación (el canal debería crearse ahora) y que el selector de archivos del respaldo funcione.
 - [ ] Hacer copia de seguridad de `~/.clash-builders/`.
 
+## Fase 11 — Corrección: mejoras de trampas (versión 1.0.1)
+
+- [x] Las mejoras de trampas ocupan un constructor: el parser las clasifica como `builder` (antes quedaban como "otras" y la app mostraba constructores libres de más), se avisa al terminar y cuentan en la vista general.
+- [x] Migración 4 y conversión de respaldos: las trampas ya guardadas como "otras" pasan a constructor sin volver a importar.
+- [ ] Comprobar en el teléfono con una trampa en mejora, y guardar ese export en `samples/` como `con-trampa.json` para fijar el formato con una prueba.
+- [ ] Comprobar si quitar un obstáculo trae un `timer` en `obstacles` (ver punto 8 de `docs/formato-export.md`).
+
 ## Después de v1
 
 - Avisos para el herrero y la base del constructor; costos de la base del constructor.
