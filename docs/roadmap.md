@@ -89,6 +89,15 @@ Probado ya en un teléfono real con Expo Go 58.0.5: las Fases 0 a 8 abren y func
 - [ ] Probar en el teléfono: nombres, secciones de laboratorio y mascotas, recursos y costos.
 - [ ] Revisar los nombres en español de `src/catalog/names.es.ts` contra el juego y completar los que falten (los que no están salen en inglés).
 
+## Fase 10 — APK instalable
+
+- [x] Íconos propios (`scripts/make-icons.py`), pantalla de arranque negra (`expo-splash-screen`) y `expo-system-ui` para el tema oscuro.
+- [x] Clave de firma propia fuera del repo y plugin que la usa (`plugins/withReleaseSigning.js`).
+- [x] Permisos innecesarios bloqueados (superponerse a otras apps, almacenamiento externo).
+- [x] `npm run build:apk` y guía en `docs/apk.md`.
+- [ ] Instalar el APK en el teléfono y comprobar: arranque, pasar los datos desde Expo Go con el respaldo, avisos de notificación (el canal debería crearse ahora) y que el selector de archivos del respaldo funcione.
+- [ ] Hacer copia de seguridad de `~/.clash-builders/`.
+
 ## Después de v1
 
 - Avisos para el herrero y la base del constructor; costos de la base del constructor.

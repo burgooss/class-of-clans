@@ -19,6 +19,7 @@ App personal para Android que permite supervisar los constructores de varias cue
 | `docs/formato-export.md` | Lo que sabemos del JSON del juego y cómo verificarlo |
 | `docs/modelo-datos.md` | Tablas SQLite y reglas de cálculo |
 | `docs/roadmap.md` | Fases de trabajo en orden |
+| `docs/apk.md` | Cómo compilar e instalar el APK, la clave de firma y cómo sacar versiones nuevas |
 
 Lee el archivo relevante antes de trabajar en una fase. Si una decisión cambia, actualiza el doc correspondiente en el mismo cambio.
 
@@ -38,6 +39,7 @@ Lee el archivo relevante antes de trabajar en una fase. Si una decisión cambia,
 
 ```bash
 npm start            # servidor de desarrollo (escanear el QR con Expo Go)
+npm run build:apk    # compila el APK release firmado y lo deja en dist/ (ver docs/apk.md)
 npm run typecheck    # tsc --noEmit
 npm test             # Jest
 npx expo-doctor      # diagnóstico de dependencias
@@ -52,6 +54,13 @@ Antes de dar una tarea por terminada: typecheck y pruebas.
 - Guardar siempre el JSON crudo de cada import para poder re-procesarlo si el parser cambia.
 - Las horas se guardan en UTC (epoch en segundos) y se muestran en la zona del teléfono.
 - No inventar campos del export: si algo no aparece en los ejemplos reales, preguntar o dejarlo documentado como pendiente.
+
+## APK
+
+- La app instalada es `com.burgooss.clashbuilders`; se compila con `npm run build:apk` (Gradle local, sin EAS). `android/` se regenera con `expo prebuild` y está en `.gitignore`: no se edita a mano; los cambios nativos van en `app.json` o en un plugin de `plugins/`.
+- La clave de firma vive en `~/.clash-builders/` (fuera del repo, nunca subirla). Perderla impide actualizar la app instalada sin desinstalarla.
+- Al sacar una versión nueva hay que subir `version` y `android.versionCode` en `app.json`.
+- Los íconos los genera `scripts/make-icons.py`.
 
 ## Datos personales
 
